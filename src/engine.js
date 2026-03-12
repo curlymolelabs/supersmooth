@@ -91,8 +91,10 @@ function detectState(profile, records) {
     if (records.some(record => record.state === 'legacy-patched')) {
         return 'legacy';
     }
-    if (records.every(record => record.state === 'pristine')) {
-        return 'pristine';
+    // 'unknown' means file exists but is not patched (no marker found).
+    // This is the normal state for an unpatched installation.
+    if (records.every(record => record.state === 'unknown')) {
+        return 'unpatched';
     }
     return 'mixed';
 }
@@ -110,7 +112,7 @@ function collectStatus(options = {}) {
 
     const installInfo = readInstallInfo(detection.basePath);
     const rawRecords = candidateTargets().map(target => readTargetRecord(installInfo.appRoot, target));
-    const profile = findMatchingProfile(installInfo, rawRecords);
+    const profile = findMatchingProfile(installInfo);
     const records = profile ? classifyRecords(profile, rawRecords) : rawRecords.map(record => ({ ...record, state: 'unknown' }));
     const manifest = readManifest(detection.basePath);
 
@@ -186,7 +188,7 @@ function applyPatch(options = {}) {
             message: 'Supersmooth is already applied.'
         };
     }
-    if (status.overallState !== 'pristine') {
+    if (status.overallState !== 'unpatched') {
         return {
             ok: false,
             code: 'unsafe-state',
@@ -360,10 +362,10 @@ function verifyInstallation(options = {}) {
         };
     }
 
-    if (status.overallState === 'pristine') {
+    if (status.overallState === 'unpatched') {
         return {
             ok: true,
-            code: 'pristine',
+            code: 'unpatched',
             status,
             message: 'Supported Antigravity build detected and no Supersmooth patch is currently applied.'
         };
