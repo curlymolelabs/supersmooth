@@ -2,16 +2,18 @@
 'use strict';
 
 const { applyPatch, collectStatus, revertPatch, verifyInstallation } = require('../src/engine');
+const { watchAndRepatch } = require('../src/watcher');
 
 function parseArgs(argv) {
     const args = argv.slice(2);
     const options = {
         command: 'status',
         explicitPath: null,
-        json: args.includes('--json')
+        json: args.includes('--json'),
+        force: args.includes('--force')
     };
 
-    for (const candidate of ['status', 'apply', 'revert', 'verify']) {
+    for (const candidate of ['status', 'apply', 'revert', 'verify', 'watch']) {
         if (args.includes(candidate)) {
             options.command = candidate;
         }
@@ -69,6 +71,17 @@ function main() {
         case 'verify':
             result = verifyInstallation(options);
             break;
+        case 'watch': {
+            const applyResult = applyPatch(options);
+            console.log(renderResult(applyResult));
+            if (!applyResult.ok && applyResult.code !== 'already-patched') {
+                process.exitCode = 1;
+                return;
+            }
+            console.log('\nStarting file watcher (Ctrl+C to stop)...');
+            watchAndRepatch(options);
+            return;
+        }
         case 'status':
         default:
             result = collectStatus(options);

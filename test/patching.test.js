@@ -120,5 +120,16 @@ function createFakeInstall(appRoot, versions = {}) {
     assert.equal(classifyTargetState({}, { exists: true, activeContent: SUPER_MARKER }), 'supersmooth-patched');
     assert.equal(classifyTargetState({}, { exists: false, activeContent: '' }), 'missing');
 
+    // --force: bypasses version check but still requires platform match
+    assert.equal(findMatchingProfile({ appVersion: '0.1.0', hostPlatform: 'win32' }), null);
+    assert.equal(findMatchingProfile({ appVersion: '0.1.0', hostPlatform: 'win32' }, { force: true })?.id, profile.id);
+    assert.equal(findMatchingProfile({ appVersion: '0.1.0', hostPlatform: 'darwin' }, { force: true })?.id, profile.id);
+    assert.equal(findMatchingProfile({ appVersion: '0.1.0', hostPlatform: 'linux' }, { force: true })?.id, profile.id);
+    assert.equal(findMatchingProfile({ appVersion: '0.1.0', hostPlatform: 'freebsd' }, { force: true }), null);
+
+    // watcher module exports
+    const watcher = require('../src/watcher');
+    assert.equal(typeof watcher.watchAndRepatch, 'function');
+
     console.log('All Supersmooth tests passed.');
 })();

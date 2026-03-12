@@ -52,9 +52,11 @@ const SUPPORTED_PROFILES = [
  * Uses version-range matching: the install's appVersion must be >=
  * the profile's minAppVersion. Platform must also match.
  */
-function matchesProfile(profile, installInfo) {
+function matchesProfile(profile, installInfo, options = {}) {
     const platformMatches = !profile.platforms || profile.platforms.includes(installInfo.hostPlatform);
     if (!platformMatches) return false;
+
+    if (options.force) return true;
 
     return compareVersions(installInfo.appVersion, profile.minAppVersion) >= 0;
 }
@@ -65,9 +67,9 @@ function matchesProfile(profile, installInfo) {
  * No longer requires originalSha256 matching. Profile matching is based
  * on version range and the presence of target files (checked by engine.js).
  */
-function findMatchingProfile(installInfo) {
+function findMatchingProfile(installInfo, options = {}) {
     for (const profile of SUPPORTED_PROFILES) {
-        if (matchesProfile(profile, installInfo)) {
+        if (matchesProfile(profile, installInfo, options)) {
             return profile;
         }
     }

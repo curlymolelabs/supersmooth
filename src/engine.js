@@ -112,7 +112,7 @@ function collectStatus(options = {}) {
 
     const installInfo = readInstallInfo(detection.basePath);
     const rawRecords = candidateTargets().map(target => readTargetRecord(installInfo.appRoot, target));
-    const profile = findMatchingProfile(installInfo);
+    const profile = findMatchingProfile(installInfo, { force: Boolean(options.force) });
     const records = profile ? classifyRecords(profile, rawRecords) : rawRecords.map(record => ({ ...record, state: 'unknown' }));
     const manifest = readManifest(detection.basePath);
 
