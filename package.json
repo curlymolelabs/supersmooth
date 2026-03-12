@@ -75,12 +75,5 @@
     "watch": "node bin/supersmooth.js watch",
     "test": "node test/patching.test.js",
     "pack:npm": "npm pack --dry-run --cache .npm-cache"
-  },
-  "files": [
-    "bin",
-    "src",
-    "README.md",
-    "LICENSE",
-    ".vscodeignore"
-  ]
+  }
 }
