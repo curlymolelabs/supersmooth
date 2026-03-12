@@ -15,14 +15,7 @@ function sha256Base64File(filePath) {
     return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('base64').replace(/=+$/, '');
 }
 
-function resolveChecksumPath(basePath, checksumKey) {
-    const appRoot = appRootFromInstallRoot(basePath);
-    const outPath = path.join(appRoot, 'out', checksumKey);
-    if (fs.existsSync(outPath)) {
-        return outPath;
-    }
-    return path.join(appRoot, checksumKey);
-}
+
 
 function updateChecksums(basePath, targets) {
     const appRoot = appRootFromInstallRoot(basePath);
@@ -57,7 +50,6 @@ function checksumMatches(basePath, target) {
 
 module.exports = {
     checksumMatches,
-    resolveChecksumPath,
     sha256File,
     updateChecksums
 };

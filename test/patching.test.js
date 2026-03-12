@@ -55,22 +55,20 @@ function createFakeInstall(appRoot, versions = {}) {
     const workbenchResult = planPatchForTarget({
         key: 'workbench',
         label: 'workbench',
-        effectAlias: 'fn',
         injectedVarName: '__supersmoothAutorunWorkbench'
     }, workbenchFixture);
     assert.equal(workbenchResult.ok, true);
-    assert.match(workbenchResult.patchCode, /__supersmoothAutorunWorkbench=fn\(\(\)=>\{/);
+    assert.match(workbenchResult.patchCode, /__supersmoothAutorunWorkbench=xi\(\(\)=>\{/);
     assert.ok(workbenchResult.patchedContent.includes(SUPER_MARKER));
     parsesAsJavaScript('workbench.js', workbenchResult.patchedContent);
 
     const jetskiResult = planPatchForTarget({
         key: 'jetskiAgent',
         label: 'jetskiAgent',
-        effectAlias: 'At',
         injectedVarName: '__supersmoothAutorunJetski'
     }, jetskiFixture);
     assert.equal(jetskiResult.ok, true);
-    assert.match(jetskiResult.patchCode, /__supersmoothAutorunJetski=At\(\(\)=>\{/);
+    assert.match(jetskiResult.patchCode, /__supersmoothAutorunJetski=Oe\(\(\)=>\{/);
     assert.ok(jetskiResult.patchedContent.includes(SUPER_MARKER));
     parsesAsJavaScript('jetski.js', jetskiResult.patchedContent);
 
@@ -110,21 +108,17 @@ function createFakeInstall(appRoot, versions = {}) {
     }
 
     const profile = SUPPORTED_PROFILES[0];
-    const targetRecords = profile.targets.map(target => ({
-        key: target.key,
-        activeSha256: target.originalSha256,
-        legacyBackupSha256: null,
-        activeContent: ''
-    }));
-    assert.equal(findMatchingProfile({ appVersion: profile.appVersion, ideVersion: profile.ideVersion, hostPlatform: 'win32' }, targetRecords)?.id, profile.id);
-    assert.equal(findMatchingProfile({ appVersion: profile.appVersion, ideVersion: profile.ideVersion, hostPlatform: 'darwin' }, targetRecords)?.id, profile.id);
-    assert.equal(findMatchingProfile({ appVersion: profile.appVersion, ideVersion: profile.ideVersion, hostPlatform: 'linux' }, targetRecords)?.id, profile.id);
-    assert.equal(findMatchingProfile({ appVersion: profile.appVersion, ideVersion: profile.ideVersion, hostPlatform: 'freebsd' }, targetRecords), null);
+    assert.equal(findMatchingProfile({ appVersion: '1.107.0', hostPlatform: 'win32' })?.id, profile.id);
+    assert.equal(findMatchingProfile({ appVersion: '1.107.0', hostPlatform: 'darwin' })?.id, profile.id);
+    assert.equal(findMatchingProfile({ appVersion: '1.107.0', hostPlatform: 'linux' })?.id, profile.id);
+    assert.equal(findMatchingProfile({ appVersion: '1.107.0', hostPlatform: 'freebsd' }), null);
+    assert.equal(findMatchingProfile({ appVersion: '1.106.0', hostPlatform: 'win32' }), null);
 
-    const targetSpec = { originalSha256: 'abc' };
-    assert.equal(classifyTargetState(targetSpec, { exists: true, activeContent: '', activeSha256: 'abc' }), 'pristine');
-    assert.equal(classifyTargetState(targetSpec, { exists: true, activeContent: LEGACY_MARKER, activeSha256: 'zzz' }), 'legacy-patched');
-    assert.equal(classifyTargetState(targetSpec, { exists: true, activeContent: SUPER_MARKER, activeSha256: 'zzz' }), 'supersmooth-patched');
+    // classifyTargetState returns 'unknown' for unmarked files (was 'pristine' before dynamic analysis)
+    assert.equal(classifyTargetState({}, { exists: true, activeContent: '' }), 'unknown');
+    assert.equal(classifyTargetState({}, { exists: true, activeContent: LEGACY_MARKER }), 'legacy-patched');
+    assert.equal(classifyTargetState({}, { exists: true, activeContent: SUPER_MARKER }), 'supersmooth-patched');
+    assert.equal(classifyTargetState({}, { exists: false, activeContent: '' }), 'missing');
 
     console.log('All Supersmooth tests passed.');
 })();

@@ -1,7 +1,6 @@
 'use strict';
 
-const LEGACY_MARKER = '/*AGFIX:autorun*/';
-const SUPER_MARKER = '/*SUPERSMOOTH:autorun*/';
+const { SUPER_MARKER, LEGACY_MARKER } = require('./support');
 
 function classifyTargetState(targetSpec, record) {
     if (!record.exists) {

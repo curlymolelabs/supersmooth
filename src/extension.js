@@ -86,7 +86,7 @@ function activate(context) {
     const config = vscode.workspace.getConfiguration('supersmooth');
     if (config.get('promptOnStartup')) {
         const status = collectStatus(statusOptions(vscode));
-        if (!status.ok || status.overallState === 'legacy' || status.overallState === 'unsupported') {
+        if (!status.ok || status.overallState === 'legacy' || status.overallState === 'unsupported' || status.overallState === 'unpatched') {
             void showStatusMessage(vscode, status);
         }
     }
