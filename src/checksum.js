@@ -1,0 +1,61 @@
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { appRootFromInstallRoot } = require('./install');
+
+function sha256File(filePath) {
+    return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+}
+
+function sha256Base64File(filePath) {
+    return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('base64');
+}
+
+function resolveChecksumPath(basePath, checksumKey) {
+    const appRoot = appRootFromInstallRoot(basePath);
+    const outPath = path.join(appRoot, 'out', checksumKey);
+    if (fs.existsSync(outPath)) {
+        return outPath;
+    }
+    return path.join(appRoot, checksumKey);
+}
+
+function updateChecksums(basePath, targets) {
+    const appRoot = appRootFromInstallRoot(basePath);
+    const productPath = path.join(appRoot, 'product.json');
+    const product = JSON.parse(fs.readFileSync(productPath, 'utf8'));
+    if (!product.checksums || typeof product.checksums !== 'object') {
+        return { updated: 0, productPath };
+    }
+
+    let updated = 0;
+    for (const target of targets) {
+        if (!target.checksumKey || !product.checksums[target.checksumKey]) {
+            continue;
+        }
+        product.checksums[target.checksumKey] = sha256Base64File(target.path);
+        updated += 1;
+    }
+
+    fs.writeFileSync(productPath, JSON.stringify(product, null, '\t'));
+    return { updated, productPath };
+}
+
+function checksumMatches(basePath, target) {
+    const appRoot = appRootFromInstallRoot(basePath);
+    const product = JSON.parse(fs.readFileSync(path.join(appRoot, 'product.json'), 'utf8'));
+    const current = product.checksums?.[target.checksumKey];
+    if (!current) {
+        return false;
+    }
+    return current === sha256Base64File(target.path);
+}
+
+module.exports = {
+    checksumMatches,
+    resolveChecksumPath,
+    sha256File,
+    updateChecksums
+};

@@ -1,0 +1,12 @@
+.git/**
+test/**
+guide.html
+src/analyzer.js
+src/detector.js
+src/integrity.js
+src/patcher.js
+src/watcher.js
+bin/cli.js
+tmp-antigravity-install/**
+.npm-cache/**
+.supersmooth/**

@@ -1,0 +1,81 @@
+{
+  "name": "supersmooth",
+  "version": "0.1.0",
+  "description": "Safer Antigravity terminal auto-run patcher for npm and Open VSX",
+  "license": "MIT",
+  "publisher": "curly-mole-labs",
+  "displayName": "Supersmooth",
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "antigravity",
+    "terminal",
+    "autorun",
+    "extension",
+    "patcher"
+  ],
+  "main": "./src/extension.js",
+  "bin": {
+    "supersmooth": "./bin/supersmooth.js"
+  },
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:supersmooth.status",
+    "onCommand:supersmooth.apply",
+    "onCommand:supersmooth.revert",
+    "onCommand:supersmooth.verify"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "supersmooth.status",
+        "title": "Supersmooth: Show Status"
+      },
+      {
+        "command": "supersmooth.apply",
+        "title": "Supersmooth: Apply Patch"
+      },
+      {
+        "command": "supersmooth.revert",
+        "title": "Supersmooth: Revert Patch"
+      },
+      {
+        "command": "supersmooth.verify",
+        "title": "Supersmooth: Verify Installation"
+      }
+    ],
+    "configuration": {
+      "title": "Supersmooth",
+      "properties": {
+        "supersmooth.installPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional Antigravity install root override. Leave empty to auto-detect."
+        },
+        "supersmooth.promptOnStartup": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show a lightweight startup notice when Supersmooth detects an unsupported or legacy-patched Antigravity install."
+        }
+      }
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "vscode": "^1.107.0"
+  },
+  "scripts": {
+    "status": "node bin/supersmooth.js status",
+    "verify": "node bin/supersmooth.js verify",
+    "test": "node test/patching.test.js",
+    "pack:npm": "npm pack --dry-run --cache .npm-cache"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE",
+    ".vscodeignore"
+  ]
+}
