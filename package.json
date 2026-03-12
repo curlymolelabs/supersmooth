@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "Safer Antigravity terminal auto-run patcher for npm and Open VSX",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/curly-mole-labs/supersmooth"
+  },
+  "homepage": "https://github.com/curly-mole-labs/supersmooth#readme",
+  "bugs": {
+    "url": "https://github.com/curly-mole-labs/supersmooth/issues"
+  },
   "publisher": "curly-mole-labs",
   "displayName": "Supersmooth",
   "categories": [
@@ -20,11 +28,7 @@
     "supersmooth": "./bin/supersmooth.js"
   },
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:supersmooth.status",
-    "onCommand:supersmooth.apply",
-    "onCommand:supersmooth.revert",
-    "onCommand:supersmooth.verify"
+    "onStartupFinished"
   ],
   "contributes": {
     "commands": [
@@ -68,6 +72,7 @@
   "scripts": {
     "status": "node bin/supersmooth.js status",
     "verify": "node bin/supersmooth.js verify",
+    "watch": "node bin/supersmooth.js watch",
     "test": "node test/patching.test.js",
     "pack:npm": "npm pack --dry-run --cache .npm-cache"
   },
