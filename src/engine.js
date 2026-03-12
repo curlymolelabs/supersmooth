@@ -5,7 +5,7 @@ const path = require('path');
 const vm = require('node:vm');
 const { detectInstallRoot, readInstallInfo, appRootFromInstallRoot } = require('./install');
 const { checksumMatches, sha256File, updateChecksums } = require('./checksum');
-const { classifyTargetState, SUPER_MARKER, planPatchForTarget } = require('./patching');
+const { classifyTargetState, SUPER_MARKER, LEGACY_MARKER, planPatchForTarget } = require('./patching');
 const { MANIFEST_VERSION, SUPER_DIR, SUPPORTED_PROFILES, findMatchingProfile } = require('./support');
 
 function getSupportRoot(basePath) {
@@ -77,7 +77,7 @@ function classifyRecords(profile, records) {
 
 function detectState(profile, records) {
     if (!profile) {
-        if (records.some(record => record.activeContent.includes('/*AGFIX:autorun*/'))) {
+        if (records.some(record => record.activeContent.includes(LEGACY_MARKER))) {
             return 'legacy';
         }
         return 'unsupported';
