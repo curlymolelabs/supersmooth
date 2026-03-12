@@ -7,11 +7,25 @@ const LEGACY_MARKER = '/*AGFIX:autorun*/';
 const SUPER_DIR = '.supersmooth';
 const MANIFEST_VERSION = 1;
 
+/**
+ * Supported build profiles.
+ *
+ * effectAlias and originalSha256 are no longer listed here because:
+ *   - effectAlias is detected dynamically by the analyzer in patching.js
+ *   - originalSha256 was used for pristine detection but is redundant now
+ *     that classifyTargetState uses marker detection and content analysis
+ *
+ * Only stable, non-minified identifiers remain:
+ *   - key:            internal identifier for this target
+ *   - label:          human-readable name
+ *   - relativePath:   path within appRoot
+ *   - checksumKey:    key in product.json checksums object
+ *   - injectedVarName: the variable name we inject (we control this, so it is stable)
+ */
 const SUPPORTED_PROFILES = [
     {
-        id: 'antigravity-1.107.0-ide-1.20.5',
-        appVersion: '1.107.0',
-        ideVersion: '1.20.5',
+        id: 'antigravity-1.107.x',
+        minAppVersion: '1.107.0',
         platforms: ['win32', 'darwin', 'linux'],
         targets: [
             {
@@ -19,8 +33,6 @@ const SUPPORTED_PROFILES = [
                 label: 'workbench',
                 relativePath: path.join('out', 'vs', 'workbench', 'workbench.desktop.main.js'),
                 checksumKey: 'vs/workbench/workbench.desktop.main.js',
-                originalSha256: 'fbdf1948820e772650d40d6e2367df8f487d8caf4d34d71d0969fc85d0ea3e6d',
-                effectAlias: 'fn',
                 injectedVarName: '__supersmoothAutorunWorkbench'
             },
             {
@@ -28,49 +40,52 @@ const SUPPORTED_PROFILES = [
                 label: 'jetskiAgent',
                 relativePath: path.join('out', 'jetskiAgent', 'main.js'),
                 checksumKey: 'jetskiAgent/main.js',
-                originalSha256: 'c0fdda28543a1fc50b6eeba3632ababc9973ad8400cad2432aab90fb84cfbe7c',
-                effectAlias: 'At',
                 injectedVarName: '__supersmoothAutorunJetski'
             }
         ]
     }
 ];
 
+/**
+ * Check if an install matches a profile.
+ *
+ * Uses version-range matching: the install's appVersion must be >=
+ * the profile's minAppVersion. Platform must also match.
+ */
 function matchesProfile(profile, installInfo) {
     const platformMatches = !profile.platforms || profile.platforms.includes(installInfo.hostPlatform);
-    return platformMatches
-        && profile.appVersion === installInfo.appVersion
-        && profile.ideVersion === installInfo.ideVersion;
+    if (!platformMatches) return false;
+
+    return compareVersions(installInfo.appVersion, profile.minAppVersion) >= 0;
 }
 
-function findMatchingProfile(installInfo, targetRecords) {
+/**
+ * Find the first matching profile for this installation.
+ *
+ * No longer requires originalSha256 matching. Profile matching is based
+ * on version range and the presence of target files (checked by engine.js).
+ */
+function findMatchingProfile(installInfo) {
     for (const profile of SUPPORTED_PROFILES) {
-        if (!matchesProfile(profile, installInfo)) {
-            continue;
-        }
-
-        let allMatch = true;
-        for (const target of profile.targets) {
-            const record = targetRecords.find(item => item.key === target.key);
-            if (!record) {
-                allMatch = false;
-                break;
-            }
-
-            const hashMatches = record.activeSha256 === target.originalSha256 || record.legacyBackupSha256 === target.originalSha256;
-            const markerMatches = record.activeContent.includes(SUPER_MARKER) || record.activeContent.includes(LEGACY_MARKER);
-            if (!hashMatches && !markerMatches) {
-                allMatch = false;
-                break;
-            }
-        }
-
-        if (allMatch) {
+        if (matchesProfile(profile, installInfo)) {
             return profile;
         }
     }
-
     return null;
+}
+
+/**
+ * Simple semver comparison (major.minor.patch).
+ * Returns negative if a < b, 0 if equal, positive if a > b.
+ */
+function compareVersions(a, b) {
+    const pa = (a || '0.0.0').split('.').map(Number);
+    const pb = (b || '0.0.0').split('.').map(Number);
+    for (let i = 0; i < 3; i++) {
+        const diff = (pa[i] || 0) - (pb[i] || 0);
+        if (diff !== 0) return diff;
+    }
+    return 0;
 }
 
 module.exports = {
@@ -79,5 +94,6 @@ module.exports = {
     SUPER_DIR,
     SUPER_MARKER,
     SUPPORTED_PROFILES,
-    findMatchingProfile
+    findMatchingProfile,
+    compareVersions
 };

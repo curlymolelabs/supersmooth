@@ -10,7 +10,9 @@ function sha256File(filePath) {
 }
 
 function sha256Base64File(filePath) {
-    return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('base64');
+    // AG stores unpadded base64 (no trailing '='). Node's digest('base64')
+    // includes padding, so we strip it to match AG's format.
+    return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('base64').replace(/=+$/, '');
 }
 
 function resolveChecksumPath(basePath, checksumKey) {
