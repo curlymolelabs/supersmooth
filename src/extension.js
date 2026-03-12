@@ -2,13 +2,6 @@
 
 const { applyPatch, collectStatus, revertPatch, verifyInstallation } = require('./engine');
 
-function showStatusMessage(vscode, status) {
-    const message = status.ok
-        ? `Supersmooth: ${status.overallState} on Antigravity ${status.installInfo.appVersion}`
-        : `Supersmooth: ${status.message}`;
-    return vscode.window.showInformationMessage(message);
-}
-
 function statusOptions(vscode) {
     const config = vscode.workspace.getConfiguration('supersmooth');
     return {
@@ -17,9 +10,27 @@ function statusOptions(vscode) {
     };
 }
 
+function showStatusMessage(vscode, status) {
+    const message = status.ok
+        ? `Supersmooth: ${status.overallState} on Antigravity ${status.installInfo.appVersion}`
+        : `Supersmooth: ${status.message}`;
+    return vscode.window.showInformationMessage(message);
+}
+
+async function promptRestart(vscode, message) {
+    const choice = await vscode.window.showInformationMessage(
+        message,
+        'Restart Now',
+        'Later'
+    );
+    if (choice === 'Restart Now') {
+        await vscode.commands.executeCommand('workbench.action.reloadWindow');
+    }
+}
+
 async function handleApply(vscode) {
     const choice = await vscode.window.showWarningMessage(
-        'Apply the Supersmooth patch to this Antigravity installation? A restart will be required.',
+        'Apply the Supersmooth patch to this Antigravity installation?',
         { modal: true },
         'Apply'
     );
@@ -33,7 +44,7 @@ async function handleApply(vscode) {
         return;
     }
 
-    await vscode.window.showInformationMessage(result.message);
+    await promptRestart(vscode, 'Supersmooth applied. Restart to activate.');
 }
 
 async function handleRevert(vscode) {
@@ -52,7 +63,7 @@ async function handleRevert(vscode) {
         return;
     }
 
-    await vscode.window.showInformationMessage(result.message);
+    await promptRestart(vscode, 'Supersmooth reverted. Restart to restore original behavior.');
 }
 
 async function handleVerify(vscode) {
@@ -62,6 +73,47 @@ async function handleVerify(vscode) {
         return;
     }
     await vscode.window.showWarningMessage(`Supersmooth: ${result.message}`);
+}
+
+async function autoApplyOnStartup(vscode) {
+    const status = collectStatus(statusOptions(vscode));
+    if (!status.ok) {
+        return;
+    }
+
+    switch (status.overallState) {
+        case 'patched':
+            // Already patched, nothing to do. Silent.
+            return;
+
+        case 'unpatched': {
+            // Auto-apply the patch silently, then prompt restart.
+            const result = applyPatch(statusOptions(vscode));
+            if (result.ok) {
+                await promptRestart(vscode, 'Supersmooth installed and applied. Restart to activate.');
+            } else {
+                await vscode.window.showErrorMessage(`Supersmooth auto-apply failed: ${result.message}`);
+            }
+            return;
+        }
+
+        case 'legacy':
+            await vscode.window.showWarningMessage(
+                'Supersmooth: Legacy AGFIX patch detected. Please revert the old patch before Supersmooth can be applied.'
+            );
+            return;
+
+        case 'unsupported':
+            await vscode.window.showInformationMessage(
+                `Supersmooth: Unsupported Antigravity build (${status.installInfo.appVersion}). No patch available.`
+            );
+            return;
+
+        default:
+            // mixed, missing, or unknown states: show status for diagnostics
+            void showStatusMessage(vscode, status);
+            return;
+    }
 }
 
 function activate(context) {
@@ -83,13 +135,8 @@ function activate(context) {
         await handleVerify(vscode);
     }));
 
-    const config = vscode.workspace.getConfiguration('supersmooth');
-    if (config.get('promptOnStartup')) {
-        const status = collectStatus(statusOptions(vscode));
-        if (!status.ok || status.overallState === 'legacy' || status.overallState === 'unsupported' || status.overallState === 'unpatched') {
-            void showStatusMessage(vscode, status);
-        }
-    }
+    // Auto-apply on startup: detect state and act.
+    void autoApplyOnStartup(vscode);
 }
 
 function deactivate() {}

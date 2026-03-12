@@ -56,11 +56,6 @@
           "type": "string",
           "default": "",
           "description": "Optional Antigravity install root override. Leave empty to auto-detect."
-        },
-        "supersmooth.promptOnStartup": {
-          "type": "boolean",
-          "default": false,
-          "description": "Show a lightweight startup notice when Supersmooth detects an unsupported or legacy-patched Antigravity install."
         }
       }
     }

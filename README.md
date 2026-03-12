@@ -46,14 +46,20 @@ When Antigravity auto-updates, it silently overwrites patched bundles. The `watc
 
 Press `Ctrl+C` to stop watching.
 
-## Extension Commands
+## Extension
 
-After installing the extension:
+After installing the `.vsix`, Supersmooth automatically detects and patches your Antigravity installation. A notification prompts you to restart. After the restart, the terminal autorun confirmation is gone.
 
-- **Supersmooth: Show Status** - displays current patch state
-- **Supersmooth: Apply Patch** - applies with confirmation dialog
-- **Supersmooth: Revert Patch** - restores from backup
-- **Supersmooth: Verify Installation** - checks syntax and checksums
+**That's it.** No manual steps needed.
+
+### Admin Commands (Command Palette)
+
+These are available for diagnostics and recovery:
+
+- **Supersmooth: Show Status** - shows current patch state
+- **Supersmooth: Apply Patch** - re-apply if Antigravity updated and overwrote the patch
+- **Supersmooth: Revert Patch** - restore original bundles from backup
+- **Supersmooth: Verify Installation** - check syntax and checksum integrity
 
 ## Supported Platforms
 

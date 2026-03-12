@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supersmooth: Open VSX Publishing Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #13131a;
+            --surface-raised: #1a1a24;
+            --surface-hover: #22222e;
+            --border: #2a2a3a;
+            --border-accent: #4F8EF744;
+            --text-primary: #e8e8ed;
+            --text-secondary: #9898a8;
+            --text-muted: #6a6a7a;
+            --accent: #4F8EF7;
+            --accent-bright: #6BA0FF;
+            --purple: #7C5CFC;
+            --purple-bright: #9B7FFF;
+            --green: #34D399;
+            --green-dim: #065f46;
+            --amber: #FBBF24;
+            --amber-dim: #78350f;
+            --red: #F87171;
+            --red-dim: #7f1d1d;
+            --gradient-accent: linear-gradient(135deg, #4F8EF7, #7C5CFC);
+            --gradient-hero: linear-gradient(135deg, #4F8EF720, #7C5CFC10);
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 64px 0 48px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 400px;
+            background: radial-gradient(ellipse, #4F8EF710 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .hero-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .hero h1 {
+            font-size: 40px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            font-size: 17px;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* Progress tracker */
+        .progress-track {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            padding: 32px 0 48px;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 90px;
+        }
+
+        .progress-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            background: var(--surface-raised);
+            border: 2px solid var(--border);
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .progress-step.active .progress-circle {
+            background: var(--gradient-accent);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 0 20px #4F8EF730;
+        }
+
+        .progress-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .progress-step.active .progress-label {
+            color: var(--text-secondary);
+        }
+
+        .progress-line {
+            flex-shrink: 0;
+            width: 24px;
+            height: 2px;
+            background: var(--border);
+            margin-top: 17px;
+        }
+
+        /* Step cards */
+        .step-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            margin-bottom: 20px;
+            position: relative;
+            transition: border-color 0.3s;
+        }
+
+        .step-card:hover {
+            border-color: var(--border-accent);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            background: var(--gradient-accent);
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .step-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: auto;
+        }
+
+        .step-tag.human {
+            background: var(--amber-dim);
+            color: var(--amber);
+        }
+
+        .step-tag.terminal {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .step-content p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 15px;
+        }
+
+        .step-content strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Action lists */
+        .action-list {
+            list-style: none;
+            margin: 16px 0;
+        }
+
+        .action-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            border-top: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .action-list li:first-child {
+            border-top: none;
+        }
+
+        .action-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            margin-top: 1px;
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            color: var(--accent);
+        }
+
+        .action-list a {
+            color: var(--accent-bright);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .action-list a:hover {
+            border-color: var(--accent-bright);
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: #0c0c14;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin: 16px 0;
+            font-family: var(--font-mono);
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block .prefix {
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        .code-block .cmd {
+            color: var(--accent-bright);
+        }
+
+        .code-block .arg {
+            color: var(--purple-bright);
+        }
+
+        .code-block .placeholder {
+            color: var(--amber);
+            font-style: italic;
+        }
+
+        .code-block .comment {
+            color: var(--text-muted);
+        }
+
+        .code-copy {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: var(--font-sans);
+            transition: all 0.2s;
+        }
+
+        .code-copy:hover {
+            background: var(--surface-hover);
+            color: var(--text-secondary);
+        }
+
+        /* Callout */
+        .callout {
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+            margin: 16px 0;
+            font-size: 14px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .callout-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .callout.warning {
+            background: #fbbf2408;
+            border: 1px solid #fbbf2420;
+            color: var(--amber);
+        }
+
+        .callout.info {
+            background: #4F8EF708;
+            border: 1px solid #4F8EF720;
+            color: var(--accent-bright);
+        }
+
+        .callout.danger {
+            background: #f8717108;
+            border: 1px solid #f8717120;
+            color: var(--red);
+        }
+
+        .callout.success {
+            background: #34d39908;
+            border: 1px solid #34d39920;
+            color: var(--green);
+        }
+
+        /* Preflight */
+        .preflight {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 32px;
+            margin-bottom: 32px;
+        }
+
+        .preflight h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .check-list {
+            list-style: none;
+        }
+
+        .check-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            border: 2px solid var(--border);
+            flex-shrink: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            background: var(--surface-raised);
+        }
+
+        .checkbox.checked {
+            background: var(--gradient-accent);
+            border-color: transparent;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .check-list code {
+            font-family: var(--font-mono);
+            font-size: 12.5px;
+            background: var(--surface-raised);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        /* Troubleshoot table */
+        .trouble-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 13.5px;
+        }
+
+        .trouble-table th {
+            text-align: left;
+            padding: 10px 16px;
+            background: var(--surface-raised);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .trouble-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+
+        .trouble-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .trouble-table td:first-child {
+            color: var(--red);
+            font-family: var(--font-mono);
+            font-size: 12.5px;
+            width: 40%;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 48px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 40px 0;
+        }
+
+        /* Interactive checkbox */
+        .checkbox { cursor: pointer; }
+        .checkbox:hover { border-color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- Hero -->
+        <div class="hero">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                Publishing Guide
+            </div>
+            <h1>Supersmooth on Open VSX</h1>
+            <p>Step-by-step guide to publish the Supersmooth extension to the Open VSX registry</p>
+        </div>
+
+        <!-- Progress tracker -->
+        <div class="progress-track">
+            <div class="progress-step active"><div class="progress-circle">1</div><div class="progress-label">Eclipse Account</div></div>
+            <div class="progress-line"></div>
+            <div class="progress-step active"><div class="progress-circle">2</div><div class="progress-label">Publisher Agreement</div></div>
+            <div class="progress-line"></div>
+            <div class="progress-step active"><div class="progress-circle">3</div><div class="progress-label">Access Token</div></div>
+            <div class="progress-line"></div>
+            <div class="progress-step active"><div class="progress-circle">4</div><div class="progress-label">Create Namespace</div></div>
+            <div class="progress-line"></div>
+            <div class="progress-step active"><div class="progress-circle">5</div><div class="progress-label">Package</div></div>
+            <div class="progress-line"></div>
+            <div class="progress-step active"><div class="progress-circle">6</div><div class="progress-label">Publish</div></div>
+            <div class="progress-line"></div>
+            <div class="progress-step active"><div class="progress-circle">7</div><div class="progress-label">Verify</div></div>
+        </div>
+
+        <!-- Preflight -->
+        <div class="preflight">
+            <h3>🛫 Pre-flight Checklist</h3>
+            <ul class="check-list">
+                <li><div class="checkbox" onclick="this.classList.toggle('checked')"></div>Tests pass: <code>npm test</code></li>
+                <li><div class="checkbox" onclick="this.classList.toggle('checked')"></div>Dry-run pack: <code>npm.cmd pack --dry-run --cache .npm-cache</code></li>
+                <li><div class="checkbox" onclick="this.classList.toggle('checked')"></div>E2E test on real Antigravity install</li>
+                <li><div class="checkbox" onclick="this.classList.toggle('checked')"></div>Version in <code>package.json</code> is correct (currently <code>0.1.0</code>)</li>
+            </ul>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">Create an Eclipse Account</div>
+                <span class="step-tag human">Manual</span>
+            </div>
+            <div class="step-content">
+                <p>An Eclipse Foundation account is required to sign the Publisher Agreement, which is a prerequisite for publishing to Open VSX.</p>
+                <ul class="action-list">
+                    <li>
+                        <div class="action-icon">→</div>
+                        Go to <a href="https://accounts.eclipse.org/user/register" target="_blank">accounts.eclipse.org/user/register</a>
+                    </li>
+                    <li>
+                        <div class="action-icon">→</div>
+                        Register with your email
+                    </li>
+                    <li>
+                        <div class="action-icon">!</div>
+                        <strong>Fill in the GitHub Username field.</strong> It must match the GitHub account you use to log into open-vsx.org.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">Sign the Publisher Agreement</div>
+                <span class="step-tag human">Manual</span>
+            </div>
+            <div class="step-content">
+                <ul class="action-list">
+                    <li>
+                        <div class="action-icon">→</div>
+                        Go to <a href="https://open-vsx.org" target="_blank">open-vsx.org</a>, click account icon (top-right), log in with <strong>GitHub</strong>
+                    </li>
+                    <li>
+                        <div class="action-icon">→</div>
+                        Click your avatar, go to <strong>Settings</strong> > <strong>Profile</strong>
+                    </li>
+                    <li>
+                        <div class="action-icon">→</div>
+                        Click <strong>Log in with Eclipse</strong>, authorize the app
+                    </li>
+                    <li>
+                        <div class="action-icon">→</div>
+                        Click <strong>Show Publisher Agreement</strong>, read it, click <strong>Agree</strong>
+                    </li>
+                </ul>
+                <div class="callout warning">
+                    <span class="callout-icon">⚠</span>
+                    The "Eclipse Contributor Agreement" (ECA) is a different thing. You need the <strong>Publisher Agreement</strong> specifically.
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">Generate an Access Token</div>
+                <span class="step-tag human">Manual</span>
+            </div>
+            <div class="step-content">
+                <ul class="action-list">
+                    <li>
+                        <div class="action-icon">→</div>
+                        On open-vsx.org, go to <strong>Settings</strong> > <strong>Access Tokens</strong>
+                    </li>
+                    <li>
+                        <div class="action-icon">→</div>
+                        Click <strong>Generate New Token</strong>, enter description (e.g. "supersmooth-publish")
+                    </li>
+                    <li>
+                        <div class="action-icon">→</div>
+                        Click <strong>Generate Token</strong>
+                    </li>
+                </ul>
+                <div class="callout danger">
+                    <span class="callout-icon">⛔</span>
+                    <strong>Copy the token immediately.</strong> It will not be shown again. Store it securely. If lost, delete it and generate a new one.
+                </div>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Step 4 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <div class="step-title">Create the Namespace</div>
+                <span class="step-tag terminal">Terminal</span>
+            </div>
+            <div class="step-content">
+                <p>Your <code>package.json</code> has <code>"publisher": "curly-mole-labs"</code>. Create that namespace in the registry:</p>
+                <div class="code-block">
+                    <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                    <span class="prefix">❯ </span><span class="cmd">npx</span> <span class="arg">ovsx create-namespace</span> curly-mole-labs <span class="arg">-p</span> <span class="placeholder">YOUR_TOKEN</span>
+                </div>
+                <div class="callout info">
+                    <span class="callout-icon">ℹ</span>
+                    Creating a namespace does not automatically verify you as owner. To get a verified badge, follow the <a href="https://github.com/eclipse/openvsx/wiki/Namespace-Access" target="_blank" style="color: var(--accent-bright)">namespace ownership claim</a> process after publishing.
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <div class="step-title">Package the Extension</div>
+                <span class="step-tag terminal">Terminal</span>
+            </div>
+            <div class="step-content">
+                <p>Build the <code>.vsix</code> file from the supersmooth project root:</p>
+                <div class="code-block">
+                    <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                    <span class="prefix">❯ </span><span class="cmd">npx</span> <span class="arg">@vscode/vsce package</span><br>
+                    <br>
+                    <span class="comment"># Creates: supersmooth-0.1.0.vsix</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">6</div>
+                <div class="step-title">Publish to Open VSX</div>
+                <span class="step-tag terminal">Terminal</span>
+            </div>
+            <div class="step-content">
+                <p><strong>Option A: Publish the .vsix file</strong> (recommended for first time)</p>
+                <div class="code-block">
+                    <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                    <span class="prefix">❯ </span><span class="cmd">npx</span> <span class="arg">ovsx publish</span> supersmooth-0.1.0.vsix <span class="arg">-p</span> <span class="placeholder">YOUR_TOKEN</span>
+                </div>
+                <p><strong>Option B: Publish from source</strong> (packages + publishes in one step)</p>
+                <div class="code-block">
+                    <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                    <span class="prefix">❯ </span><span class="cmd">npx</span> <span class="arg">ovsx publish</span> <span class="arg">-p</span> <span class="placeholder">YOUR_TOKEN</span>
+                </div>
+                <div class="callout info">
+                    <span class="callout-icon">ℹ</span>
+                    Open VSX runs automatic scans for leaked secrets, blocklisted files, and typosquatting. If your extension is rejected, the error will explain which check failed.
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">7</div>
+                <div class="step-title">Verify the Listing</div>
+                <span class="step-tag human">Manual</span>
+            </div>
+            <div class="step-content">
+                <ul class="action-list">
+                    <li>
+                        <div class="action-icon">→</div>
+                        Check <a href="https://open-vsx.org" target="_blank">open-vsx.org</a> for your extension listing
+                    </li>
+                    <li>
+                        <div class="action-icon">→</div>
+                        Verify name, description, version, and README render correctly
+                    </li>
+                    <li>
+                        <div class="action-icon">→</div>
+                        Test installing from a fresh editor: <strong>Extensions</strong> > search "supersmooth"
+                    </li>
+                </ul>
+                <div class="callout success">
+                    <span class="callout-icon">✓</span>
+                    If everything looks good, congratulations! Supersmooth is live on Open VSX.
+                </div>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Future updates -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">↻</div>
+                <div class="step-title">Updating (Future Releases)</div>
+            </div>
+            <div class="step-content">
+                <p>For subsequent releases, only Steps 5 and 6 are needed:</p>
+                <div class="code-block">
+                    <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                    <span class="comment"># 1. Bump version in package.json</span><br>
+                    <span class="comment"># 2. Run tests</span><br>
+                    <span class="prefix">❯ </span><span class="cmd">npm</span> <span class="arg">test</span><br>
+                    <br>
+                    <span class="comment"># 3. Package</span><br>
+                    <span class="prefix">❯ </span><span class="cmd">npx</span> <span class="arg">@vscode/vsce package</span><br>
+                    <br>
+                    <span class="comment"># 4. Publish</span><br>
+                    <span class="prefix">❯ </span><span class="cmd">npx</span> <span class="arg">ovsx publish</span> supersmooth-X.Y.Z.vsix <span class="arg">-p</span> <span class="placeholder">YOUR_TOKEN</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">?</div>
+                <div class="step-title">Troubleshooting</div>
+            </div>
+            <div class="step-content">
+                <table class="trouble-table">
+                    <thead>
+                        <tr>
+                            <th>Error</th>
+                            <th>Fix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>"You must sign a Publisher Agreement"</td>
+                            <td>Go to Settings > Profile on open-vsx.org, click "Log in with Eclipse", then sign the agreement</td>
+                        </tr>
+                        <tr>
+                            <td>"Namespace not found"</td>
+                            <td>Run <code>npx ovsx create-namespace curly-mole-labs -p TOKEN</code> first</td>
+                        </tr>
+                        <tr>
+                            <td>Extension rejected by scan</td>
+                            <td>Check for accidental secrets in source. Add <code>// secret-detector:ignore</code> for false positives</td>
+                        </tr>
+                        <tr>
+                            <td>Token not working</td>
+                            <td>Tokens cannot be recovered after creation. Delete the old one and generate a new token</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Supersmooth by Curly Mole Labs</p>
+            <p style="margin-top: 8px;">
+                <a href="https://github.com/eclipse/openvsx/wiki/Publishing-Extensions" target="_blank">Open VSX Docs</a>
+                &nbsp;·&nbsp;
+                <a href="https://open-vsx.org" target="_blank">Open VSX Registry</a>
+                &nbsp;·&nbsp;
+                <a href="https://github.com/eclipse/openvsx/wiki/Namespace-Access" target="_blank">Namespace Claims</a>
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        function copyCode(button) {
+            const block = button.parentElement;
+            const text = block.textContent
+                .replace('Copy', '')
+                .replace(/❯ /g, '')
+                .replace(/# .*/g, '')
+                .trim()
+                .split('\n')
+                .map(l => l.trim())
+                .filter(Boolean)
+                .join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => { button.textContent = 'Copy'; }, 1500);
+            });
+        }
+    </script>
+</body>
+</html>
