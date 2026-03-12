@@ -8,7 +8,7 @@
  * the patch.
  *
  * Ported from antigravity-autorun/src/watcher.js, adapted for supersmooth's
- * engine API (applyPatch, collectStatus, updateChecksums).
+ * engine API (applyPatch, collectStatus).
  */
 
 const fs = require('fs');
