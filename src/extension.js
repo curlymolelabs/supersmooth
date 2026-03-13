@@ -78,6 +78,10 @@ async function handleVerify(vscode) {
 async function autoApplyOnStartup(vscode) {
     const status = collectStatus(statusOptions(vscode));
     if (!status.ok) {
+        // Install not found or detection failed. Show a helpful notice.
+        await vscode.window.showWarningMessage(
+            `Supersmooth: Could not detect Antigravity. ${status.message || 'Set the install path in Settings if needed.'}`
+        );
         return;
     }
 
@@ -87,30 +91,29 @@ async function autoApplyOnStartup(vscode) {
             return;
 
         case 'unpatched': {
-            // Auto-apply the patch silently, then prompt restart.
+            // Auto-apply the patch, then prompt restart.
             const result = applyPatch(statusOptions(vscode));
             if (result.ok) {
-                await promptRestart(vscode, 'Supersmooth installed and applied. Restart to activate.');
+                await promptRestart(vscode, 'Supersmooth applied! Restart Antigravity to activate.');
             } else {
-                await vscode.window.showErrorMessage(`Supersmooth auto-apply failed: ${result.message}`);
+                await vscode.window.showErrorMessage(`Supersmooth: Auto-apply failed. ${result.message}`);
             }
             return;
         }
 
         case 'legacy':
             await vscode.window.showWarningMessage(
-                'Supersmooth: Legacy AGFIX patch detected. Please revert the old patch before Supersmooth can be applied.'
+                'Supersmooth: A legacy AGFIX patch was detected. Please revert it before Supersmooth can be applied.'
             );
             return;
 
         case 'unsupported':
             await vscode.window.showInformationMessage(
-                `Supersmooth: Unsupported Antigravity build (${status.installInfo.appVersion}). No patch available.`
+                `Supersmooth: Antigravity ${status.installInfo.appVersion} is not yet supported. No patch available.`
             );
             return;
 
         default:
-            // mixed, missing, or unknown states: show status for diagnostics
             void showStatusMessage(vscode, status);
             return;
     }
