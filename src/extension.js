@@ -12,7 +12,7 @@ function statusOptions(vscode) {
 
 function showStatusMessage(vscode, status) {
     const message = status.ok
-        ? `Supersmooth: ${status.overallState} on Antigravity ${status.installInfo.appVersion}`
+        ? `Supersmooth: ${status.overallState} on Antigravity ${status.installInfo.ideVersion}`
         : `Supersmooth: ${status.message}`;
     return vscode.window.showInformationMessage(message);
 }
@@ -106,7 +106,7 @@ async function autoApplyOnStartup(vscode) {
 
         case 'unsupported':
             await vscode.window.showInformationMessage(
-                `Supersmooth: Antigravity ${status.installInfo.appVersion} is not yet supported. No patch available.`
+                `Supersmooth: Antigravity ${status.installInfo.ideVersion} is not yet supported. No patch available.`
             );
             return;
 
