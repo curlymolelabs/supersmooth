@@ -139,21 +139,41 @@ function activate(context) {
     // When user clicks Uninstall, onDidChange fires while we are still loaded.
     // If getExtension(selfId) returns undefined, we are being removed.
     const selfId = context.extension.id;
+    const fs = require('fs');
+    const path = require('path');
+
+    // Use globalStorageUri (VS Code guaranteed writable) for instrumentation log.
+    const globalStoragePath = context.globalStorageUri?.fsPath || '';
+
     context.subscriptions.push(
         vscode.extensions.onDidChange(() => {
             const self = vscode.extensions.getExtension(selfId);
+            const entry = `[${new Date().toISOString()}] onDidChange fired. selfId=${selfId} self=${self ? 'present' : 'GONE'}\n`;
 
-            // Log for instrumentation (helps verify event fires in AG)
+            // Log to globalStorageUri (guaranteed writable by VS Code)
+            if (globalStoragePath) {
+                try {
+                    fs.mkdirSync(globalStoragePath, { recursive: true });
+                    fs.appendFileSync(path.join(globalStoragePath, 'events.log'), entry);
+                } catch (err) {
+                    // If even globalStorageUri fails, show the error visibly
+                    vscode.window.showWarningMessage(
+                        `Supersmooth: onDidChange log failed at ${globalStoragePath}: ${err.message}`);
+                }
+            }
+
+            // Also log to engine's .supersmooth dir as fallback
             try {
-                const fs = require('fs');
-                const path = require('path');
-                const logDir = path.join(vscode.env.appRoot, '..', '.supersmooth');
-                fs.mkdirSync(logDir, { recursive: true });
-                const logFile = path.join(logDir, 'events.log');
-                const entry = `[${new Date().toISOString()}] onDidChange fired. selfId=${selfId} self=${self ? 'present' : 'GONE'}\n`;
-                fs.appendFileSync(logFile, entry);
+                const opts = statusOptions(vscode);
+                const { detectInstallRoot } = require('./install');
+                const installRoot = detectInstallRoot(opts);
+                if (installRoot) {
+                    const ssDir = path.join(installRoot, '.supersmooth');
+                    fs.mkdirSync(ssDir, { recursive: true });
+                    fs.appendFileSync(path.join(ssDir, 'events.log'), entry);
+                }
             } catch (_) {
-                // Logging is best-effort.
+                // Fallback logging is best-effort.
             }
 
             if (!self) {
@@ -164,8 +184,9 @@ function activate(context) {
                         vscode.window.showInformationMessage(
                             'Supersmooth removed. Patches reverted. Restart to complete.');
                     }
-                } catch (_) {
-                    // Best effort. Extension is going away.
+                } catch (err) {
+                    vscode.window.showErrorMessage(
+                        `Supersmooth: Revert on uninstall failed: ${err.message}`);
                 }
             }
         })
