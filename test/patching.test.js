@@ -17,8 +17,10 @@ const workbenchFixture = [
     'const xi=(value)=>value;',
     'const Zt=(value)=>value;',
     'const fn=(value)=>value;',
+    // Simulate surrounding code with fn() cleanup returns (useEffect signature)
+    'function PrevComponent(){let _a=fn(()=>{let h=setInterval(()=>{},1000);return ()=>clearInterval(h)},[]);let _b=fn(()=>{document.addEventListener("x",()=>{});return ()=>document.removeEventListener("x",()=>{})},[]);}',
     'function Lau(t,e,i,n){',
-    '  let s=xi(()=>{let B=i.commandLine;return B===""&&(B=[i.command].concat(i.args).join(" ")),B},[i]),{stepHandler:r,cascadeContext:{events:{cancelInvocation:o,sendUserInteraction:a}}}=Mr(),l=r?.getKeybindingLabel("acceptCascadeStep"),u=r?.terminalAutoExecutionPolicy??uF.OFF,d=r?.secureModeEnabled??!1,h=r?.terminalSandboxEnabled??!1,f=r?.terminalSandboxSupported??!1,p=jFo(d),b=Zt((B,O=!1)=>{a(Hi(hN,{trajectoryId:t,stepIndex:e,interaction:{case:"runCommand",value:Hi(vcn,{confirm:B,proposedCommandLine:s,submittedCommandLine:n||s,sandboxOverride:O})}})),B||o()},[t,e,s,n,a,o]),v=Zt(B=>{r?.setTerminalAutoExecutionPolicy?.(B),B===uF.EAGER&&b(!0)},[r,b]),E=Zt(()=>{b(!1)},[b]),S=Zt(()=>{b(!0)},[b]),I=Zt(()=>{b(!0,!0)},[b]),F=xi(()=>{if(f)return[{value:"sandbox-override",label:h?"Bypass sandbox":"Run in sandbox",isAllowed:!0}]},[f,h]),D=Zt(B=>{B==="sandbox-override"&&I()},[I]),N=xi(()=>({options:p,selectedValue:u,onChange:v}),[p,u,v]),T=xi(()=>({label:"Reject",onClick:E}),[E]),V=xi(()=>({label:"Run",onClick:S,keybindingLabel:l,subOptions:F,onSubOptionChange:D}),[S,l,F,D]);',
+    '  let s=xi(()=>{let B=i.commandLine;return B===""&&(B=[i.command].concat(i.args).join(" ")),B},[i]),{stepHandler:r,cascadeContext:{events:{cancelInvocation:o,sendUserInteraction:a}}}=Mr(),l=r?.getKeybindingLabel("acceptCascadeStep"),u=r?.terminalAutoExecutionPolicy??uF.OFF,d=r?.secureModeEnabled??!1,h=r?.terminalSandboxEnabled??!1,f=r?.terminalSandboxSupported??!1,p=jFo(d),b=Zt((B,O=!1)=>{a(Hi(hN,{trajectoryId:t,stepIndex:e,interaction:{case:"runCommand",value:Hi(vcn,{confirm:B,proposedCommandLine:s,submittedCommandLine:n||s,sandboxOverride:O})}})),B||o()},[t,e,s,n,a,o]),v=Zt(B=>{r?.setTerminalAutoExecutionPolicy?.(B),B===uF.EAGER&&b(!0)},[r,b]),E=Zt(()=>{b(!1)},[b]),S=Zt(()=>{b(!0)},[b]),I=Zt(()=>{b(!0,!0)},[b]),F=xi(()=>{if(f)return[{value:"sandbox-override",label:h?"Bypass sandbox":"Run in sandbox",isAllowed:!0}]},[f,h]),D=Zt(B=>{B==="sandbox-override"&&I()},[I]),N=xi(()=>({options:p,selectedValue:d,onChange:v}),[p,u,v]),T=xi(()=>({label:"Reject",onClick:E}),[E]),V=xi(()=>({label:"Run",onClick:S,keybindingLabel:l,subOptions:F,onSubOptionChange:D}),[S,l,F,D]);',
     '  return {N,T,V};',
     '}'
 ].join('\n');
@@ -30,6 +32,8 @@ const jetskiFixture = [
     'const Oe=(value)=>value;',
     'const Ce=(value)=>value;',
     'const At=(value)=>value;',
+    // Simulate surrounding code with At() cleanup returns (useEffect signature)
+    'function PrevComponent(){let _a=At(()=>{let h=setInterval(()=>{},1000);return ()=>clearInterval(h)},[]);let _b=At(()=>{document.addEventListener("x",()=>{});return ()=>document.removeEventListener("x",()=>{})},[]);}',
     'function LSi(e,t,r,n){',
     '  let a=Oe(()=>{let U=r.commandLine;return U===""&&(U=[r.command].concat(r.args).join(" ")),U},[r]),{stepHandler:i,cascadeContext:{events:{cancelInvocation:s,sendUserInteraction:l}}}=Wn(),u=i?.getKeybindingLabel("acceptCascadeStep"),d=i?.terminalAutoExecutionPolicy??Jd.OFF,f=i?.secureModeEnabled??!1,g=i?.terminalSandboxEnabled??!1,b=i?.terminalSandboxSupported??!1,v=Lhn(f),F=Ce((U,W=!1)=>{l(ur(tE,{trajectoryId:e,stepIndex:t,interaction:{case:"runCommand",value:ur(lQr,{confirm:U,proposedCommandLine:a,submittedCommandLine:n||a,sandboxOverride:W})}})),U||s()},[e,t,a,n,l,s]),S=Ce(U=>{i?.setTerminalAutoExecutionPolicy?.(U),U===Jd.EAGER&&F(!0)},[i,F]),C=Ce(()=>{F(!1)},[F]),V=Ce(()=>{F(!0)},[F]),x=Ce(()=>{F(!0,!0)},[F]),T=Oe(()=>{if(b)return[{value:"sandbox-override",label:g?"Bypass sandbox":"Run in sandbox",isAllowed:!0}]},[b,g]),B=Ce(U=>{U==="sandbox-override"&&x()},[x]),G=Oe(()=>({options:v,selectedValue:d,onChange:S}),[v,d,S]),L=Oe(()=>({label:"Reject",onClick:C}),[C]),X=Oe(()=>({label:"Run",onClick:V,keybindingLabel:u,subOptions:T,onSubOptionChange:B}),[V,u,T,B]);',
     '  return {G,L,X};',
@@ -58,7 +62,7 @@ function createFakeInstall(appRoot, versions = {}) {
         injectedVarName: '__supersmoothAutorunWorkbench'
     }, workbenchFixture);
     assert.equal(workbenchResult.ok, true);
-    assert.match(workbenchResult.patchCode, /__supersmoothAutorunWorkbench=xi\(\(\)=>\{/);
+    assert.match(workbenchResult.patchCode, /__supersmoothAutorunWorkbench=fn\(\(\)=>{/);
     assert.ok(workbenchResult.patchedContent.includes(SUPER_MARKER));
     parsesAsJavaScript('workbench.js', workbenchResult.patchedContent);
 
@@ -68,7 +72,7 @@ function createFakeInstall(appRoot, versions = {}) {
         injectedVarName: '__supersmoothAutorunJetski'
     }, jetskiFixture);
     assert.equal(jetskiResult.ok, true);
-    assert.match(jetskiResult.patchCode, /__supersmoothAutorunJetski=Oe\(\(\)=>\{/);
+    assert.match(jetskiResult.patchCode, /__supersmoothAutorunJetski=At\(\(\)=>{/);
     assert.ok(jetskiResult.patchedContent.includes(SUPER_MARKER));
     parsesAsJavaScript('jetski.js', jetskiResult.patchedContent);
 

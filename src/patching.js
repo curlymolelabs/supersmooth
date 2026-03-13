@@ -1,12 +1,12 @@
 'use strict';
 
-const { SUPER_MARKER, LEGACY_MARKER } = require('./support');
+const { SUPER_MARKER, PANEL_MARKER, LEGACY_MARKER } = require('./support');
 
 function classifyTargetState(targetSpec, record) {
     if (!record.exists) {
         return 'missing';
     }
-    if (record.activeContent.includes(SUPER_MARKER)) {
+    if (record.activeContent.includes(SUPER_MARKER) || record.activeContent.includes(PANEL_MARKER)) {
         return 'supersmooth-patched';
     }
     if (record.activeContent.includes(LEGACY_MARKER)) {
@@ -110,7 +110,7 @@ function planPatchForTarget(targetSpec, content) {
 
     // ---- Layer 4: useEffect alias detection ----
     const effectWindow = content.slice(
-        Math.max(0, onChangeOffset - 10000),
+        Math.max(0, onChangeOffset - 50000),
         Math.min(content.length, onChangeOffset + 10000)
     );
 
@@ -191,7 +191,7 @@ function escapeRegex(value) {
  * @returns {{ alias: string|null, confidence: number }}
  */
 function findUseEffectAlias(context, useCallbackAlias) {
-    const exclude = new Set(['var', 'new', 'for', 'if', 'fn']);
+    const exclude = new Set(['var', 'new', 'for', 'if']);
 
     // Phase 1: Cleanup return pattern (definitive)
     const cleanupCandidates = {};
@@ -240,9 +240,101 @@ function findUseEffectAlias(context, useCallbackAlias) {
     return { alias: bestAlias, confidence: bestScore };
 }
 
+/**
+ * Plan a patch for the agent panel "Steps Require Input" auto-expand.
+ *
+ * Injects a useEffect that calls setExpanded(true) when waiting steps exist,
+ * ensuring the approval prompt section is always visible.
+ *
+ * Only applies to the workbench target. Returns { ok: false } gracefully
+ * for targets that don't contain the anchor (e.g., jetskiAgent).
+ *
+ * @param {string} content  Full file content (possibly already autorun-patched)
+ * @returns {{ ok: boolean, reason?: string, patchedContent?: string }}
+ */
+function planPanelPatchForTarget(content) {
+    if (content.includes(PANEL_MARKER)) {
+        return { ok: false, reason: 'panel-already-patched' };
+    }
+
+    // ---- Anchor: "1 Step Requires Input" ----
+    const anchor = '"1 Step Requires Input"';
+    const anchorIdx = content.indexOf(anchor);
+    if (anchorIdx === -1) {
+        return { ok: false, reason: 'panel-anchor-not-found' };
+    }
+
+    // ---- Extract Tsu function signature ----
+    const searchRegion = content.substring(Math.max(0, anchorIdx - 1200), anchorIdx);
+    const sigMatch = searchRegion.match(
+        /\(\{steps:(\w+),\w+:(\w+),\w+:(\w+),expanded:(\w+),setExpanded:(\w+),\w+:(\w+)\}\)=>\{/
+    );
+    if (!sigMatch) {
+        return { ok: false, reason: 'panel-signature-not-found' };
+    }
+    const setExpandedVar = sigMatch[5];
+
+    // ---- Find useMemo guard pattern ----
+    const nearAnchor = content.substring(anchorIdx - 600, anchorIdx);
+    const guardMatch = nearAnchor.match(/(\w+),(\w+)\]\);if\((\w+)\.length===0\)return null/);
+    if (!guardMatch) {
+        return { ok: false, reason: 'panel-guard-not-found' };
+    }
+    const memoDepA = guardMatch[1];
+    const memoDepB = guardMatch[2];
+    const waitVar = guardMatch[3];
+
+    // ---- Find injection point in full source ----
+    const splitPattern = memoDepA + ',' + memoDepB + ']);';
+    const guardStr = 'if(' + waitVar + '.length===0)return null';
+    const fullPattern = splitPattern + guardStr;
+    const fullPatternIdx = content.indexOf(fullPattern);
+    if (fullPatternIdx === -1) {
+        return { ok: false, reason: 'panel-injection-point-not-found' };
+    }
+    const splitPoint = fullPatternIdx + splitPattern.length;
+
+    // ---- Find useEffect alias ----
+    const wideRegion = content.substring(Math.max(0, anchorIdx - 100000), anchorIdx);
+    const hookPattern = /\b([a-zA-Z_$]\w{0,2})\(\(\)=>\{/g;
+    const aliasCounts = {};
+    let hm;
+    while ((hm = hookPattern.exec(wideRegion)) !== null) {
+        const name = hm[1];
+        if (name === 'xi' || name === 'Zt') continue;
+        aliasCounts[name] = (aliasCounts[name] || 0) + 1;
+    }
+
+    let useEffectAlias;
+    if (aliasCounts['fn']) {
+        useEffectAlias = 'fn';
+    } else {
+        const sorted = Object.entries(aliasCounts).sort((a, b) => b[1] - a[1]);
+        if (sorted.length === 0) {
+            return { ok: false, reason: 'panel-useeffect-not-found' };
+        }
+        useEffectAlias = sorted[0][0];
+    }
+
+    // ---- Build and inject ----
+    const injectedEffect = PANEL_MARKER + useEffectAlias +
+        '(()=>{' + waitVar + '.length>0&&' + setExpandedVar + '(!0)},[' +
+        waitVar + '.length,' + setExpandedVar + ']);';
+
+    const patchedContent = content.substring(0, splitPoint) + injectedEffect + content.substring(splitPoint);
+
+    return {
+        ok: true,
+        patchedContent,
+        patchCode: injectedEffect
+    };
+}
+
 module.exports = {
     LEGACY_MARKER,
+    PANEL_MARKER,
     SUPER_MARKER,
     classifyTargetState,
-    planPatchForTarget
+    planPatchForTarget,
+    planPanelPatchForTarget
 };
