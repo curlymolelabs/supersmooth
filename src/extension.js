@@ -20,8 +20,7 @@ function showStatusMessage(vscode, status) {
 async function promptRestart(vscode, message) {
     const choice = await vscode.window.showInformationMessage(
         message,
-        'Restart Now',
-        'Later'
+        'Restart Now'
     );
     if (choice === 'Restart Now') {
         await vscode.commands.executeCommand('workbench.action.reloadWindow');
@@ -44,7 +43,7 @@ async function handleApply(vscode) {
         return;
     }
 
-    await promptRestart(vscode, 'Supersmooth applied. Restart to activate.');
+    await promptRestart(vscode, 'Supersmooth applied! Close and reopen Antigravity to activate.');
 }
 
 async function handleRevert(vscode) {
@@ -63,7 +62,7 @@ async function handleRevert(vscode) {
         return;
     }
 
-    await promptRestart(vscode, 'Supersmooth reverted. Restart to restore original behavior.');
+    await promptRestart(vscode, 'Supersmooth reverted. Close and reopen Antigravity to restore original behavior.');
 }
 
 async function handleVerify(vscode) {
@@ -78,7 +77,6 @@ async function handleVerify(vscode) {
 async function autoApplyOnStartup(vscode) {
     const status = collectStatus(statusOptions(vscode));
     if (!status.ok) {
-        // Install not found or detection failed. Show a helpful notice.
         await vscode.window.showWarningMessage(
             `Supersmooth: Could not detect Antigravity. ${status.message || 'Set the install path in Settings if needed.'}`
         );
@@ -91,10 +89,9 @@ async function autoApplyOnStartup(vscode) {
             return;
 
         case 'unpatched': {
-            // Auto-apply the patch, then prompt restart.
             const result = applyPatch(statusOptions(vscode));
             if (result.ok) {
-                await promptRestart(vscode, 'Supersmooth applied! Restart Antigravity to activate.');
+                await promptRestart(vscode, 'SuperSmooth Installed! Close and reopen Antigravity to activate.');
             } else {
                 await vscode.window.showErrorMessage(`Supersmooth: Auto-apply failed. ${result.message}`);
             }
@@ -137,6 +134,42 @@ function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('supersmooth.verify', async () => {
         await handleVerify(vscode);
     }));
+
+    // Detect self-uninstall via extension change event.
+    // When user clicks Uninstall, onDidChange fires while we are still loaded.
+    // If getExtension(selfId) returns undefined, we are being removed.
+    const selfId = context.extension.id;
+    context.subscriptions.push(
+        vscode.extensions.onDidChange(() => {
+            const self = vscode.extensions.getExtension(selfId);
+
+            // Log for instrumentation (helps verify event fires in AG)
+            try {
+                const fs = require('fs');
+                const path = require('path');
+                const logDir = path.join(vscode.env.appRoot, '..', '.supersmooth');
+                fs.mkdirSync(logDir, { recursive: true });
+                const logFile = path.join(logDir, 'events.log');
+                const entry = `[${new Date().toISOString()}] onDidChange fired. selfId=${selfId} self=${self ? 'present' : 'GONE'}\n`;
+                fs.appendFileSync(logFile, entry);
+            } catch (_) {
+                // Logging is best-effort.
+            }
+
+            if (!self) {
+                // We are being removed. Revert patches.
+                try {
+                    const result = revertPatch(statusOptions(vscode));
+                    if (result.ok) {
+                        vscode.window.showInformationMessage(
+                            'Supersmooth removed. Patches reverted. Restart to complete.');
+                    }
+                } catch (_) {
+                    // Best effort. Extension is going away.
+                }
+            }
+        })
+    );
 
     // Auto-apply on startup: detect state and act.
     void autoApplyOnStartup(vscode);

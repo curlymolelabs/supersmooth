@@ -1,7 +1,7 @@
 {
   "name": "supersmooth",
   "version": "0.1.0",
-  "description": "Safer Antigravity terminal auto-run patcher for npm and Open VSX",
+  "description": "Seamless Antigravity terminal workflow. Auto-accepts saved run policies and auto-expands approval prompts.",
   "license": "MIT",
   "icon": "icon.png",
   "repository": {
@@ -21,8 +21,8 @@
     "antigravity",
     "terminal",
     "autorun",
-    "extension",
-    "patcher"
+    "smooth",
+    "workflow"
   ],
   "main": "./src/extension.js",
   "bin": {
