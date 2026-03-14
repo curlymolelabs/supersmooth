@@ -43,8 +43,13 @@ async function handleApply(vscode) {
         return;
     }
 
-    await vscode.window.showInformationMessage('Supersmooth applied! Reloading...');
-    setTimeout(() => vscode.commands.executeCommand('workbench.action.reloadWindow'), 1000);
+    // Auto-reload after 2s, or user clicks button immediately
+    const reloadTimer = setTimeout(() => vscode.commands.executeCommand('workbench.action.reloadWindow'), 2000);
+    const choice = await vscode.window.showInformationMessage('Supersmooth applied! Reloading...', 'Restart Now');
+    if (choice === 'Restart Now') {
+        clearTimeout(reloadTimer);
+        await vscode.commands.executeCommand('workbench.action.reloadWindow');
+    }
 }
 
 async function handleRevert(vscode) {
@@ -92,8 +97,13 @@ async function autoApplyOnStartup(vscode) {
         case 'unpatched': {
             const result = applyPatch(statusOptions(vscode));
             if (result.ok) {
-                await vscode.window.showInformationMessage('Supersmooth applied! Reloading...');
-                setTimeout(() => vscode.commands.executeCommand('workbench.action.reloadWindow'), 1000);
+                // Auto-reload after 2s, or user clicks button immediately
+                const reloadTimer = setTimeout(() => vscode.commands.executeCommand('workbench.action.reloadWindow'), 2000);
+                const choice = await vscode.window.showInformationMessage('Supersmooth applied! Reloading...', 'Restart Now');
+                if (choice === 'Restart Now') {
+                    clearTimeout(reloadTimer);
+                    await vscode.commands.executeCommand('workbench.action.reloadWindow');
+                }
             } else {
                 await vscode.window.showErrorMessage(`Supersmooth: Auto-apply failed. ${result.message}`);
             }
