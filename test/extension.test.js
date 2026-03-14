@@ -45,9 +45,15 @@ const { __internal } = require('../src/extension');
         __internal.determineStartupAction(enabled, { ok: true, overallState: 'mixed' }),
         'show-status'
     );
+    // Active disabled state: manifest exists, user deliberately disabled. Stay quiet.
     assert.equal(
-        __internal.determineStartupAction(disabled, { ok: true, overallState: 'unpatched' }),
+        __internal.determineStartupAction(disabled, { ok: true, overallState: 'unpatched', manifest: { version: 1 } }),
         'noop'
+    );
+    // Stale disabled state: no manifest, desiredMode survived uninstall/reinstall. Re-prompt.
+    assert.equal(
+        __internal.determineStartupAction(disabled, { ok: true, overallState: 'unpatched', manifest: null }),
+        'prompt-enable'
     );
     assert.equal(
         __internal.determineStartupAction(enabled, { ok: false, overallState: 'unpatched' }),

@@ -187,6 +187,12 @@ function determineStartupAction(desiredMode, status) {
     }
 
     if (desiredMode === DESIRED_MODE_DISABLED) {
+        // If unpatched and no manifest exists, this is a stale disabled state
+        // from a previous extension install cycle (VS Code globalState persists
+        // across uninstall/reinstall). Treat as a fresh install.
+        if (status.overallState === 'unpatched' && !status.manifest) {
+            return 'prompt-enable';
+        }
         return 'noop';
     }
 
