@@ -8,5 +8,6 @@ docs/**
 plans/**
 research/**
 DISTRIBUTION.md
+README_old.md
 *.tgz
 *.vsix
