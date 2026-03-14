@@ -3,9 +3,9 @@
 const { applyPatch, collectStatus, revertPatch, verifyInstallation } = require('./engine');
 
 const DESIRED_MODE_KEY = 'supersmooth.desiredMode';
-const PROMPTED_ENABLE_KEY = 'supersmooth.promptedEnable';
 const DESIRED_MODE_ENABLED = 'enabled';
 const DESIRED_MODE_DISABLED = 'disabled';
+const DESIRED_MODE_DEFERRED = 'deferred';
 
 function statusOptions(vscode) {
     const config = vscode.workspace.getConfiguration('supersmooth');
@@ -21,6 +21,8 @@ function describeDesiredMode(mode) {
             return 'enabled';
         case DESIRED_MODE_DISABLED:
             return 'disabled';
+        case DESIRED_MODE_DEFERRED:
+            return 'deferred';
         default:
             return 'not active yet';
     }
@@ -30,16 +32,8 @@ function getDesiredMode(context) {
     return context.globalState.get(DESIRED_MODE_KEY, '');
 }
 
-function hasPromptedEnable(context) {
-    return Boolean(context.globalState.get(PROMPTED_ENABLE_KEY, false));
-}
-
 async function setDesiredMode(context, mode) {
     await context.globalState.update(DESIRED_MODE_KEY, mode);
-}
-
-async function markEnablePromptSeen(context) {
-    await context.globalState.update(PROMPTED_ENABLE_KEY, true);
 }
 
 function getStatusSummary(status, desiredMode) {
@@ -173,7 +167,7 @@ async function showSummaryToast(vscode, summary) {
     }
 }
 
-function determineStartupAction(desiredMode, promptedEnable, status) {
+function determineStartupAction(desiredMode, status) {
     if (!status.ok) {
         return 'noop';
     }
@@ -182,9 +176,13 @@ function determineStartupAction(desiredMode, promptedEnable, status) {
         if (status.overallState === 'patched') {
             return 'adopt-enabled';
         }
-        if (status.overallState === 'unpatched' && !promptedEnable) {
+        if (status.overallState === 'unpatched') {
             return 'prompt-enable';
         }
+        return 'noop';
+    }
+
+    if (desiredMode === DESIRED_MODE_DEFERRED) {
         return 'noop';
     }
 
@@ -224,8 +222,6 @@ async function enableSupersmooth(context, vscode, options = {}) {
         }
     }
 
-    await markEnablePromptSeen(context);
-
     const result = applyPatch(statusOptions(vscode));
     if (!result.ok) {
         await vscode.window.showErrorMessage(`Supersmooth: ${result.message}`);
@@ -264,7 +260,6 @@ async function disableSupersmooth(context, vscode, options = {}) {
         }
     }
 
-    await markEnablePromptSeen(context);
     await setDesiredMode(context, DESIRED_MODE_DISABLED);
 
     const result = revertPatch(statusOptions(vscode));
@@ -324,7 +319,7 @@ async function handleStatus(context, vscode) {
             if (choice === 'Enable Now') {
                 await enableSupersmooth(context, vscode, { promptForConfirmation: false });
             } else if (choice === 'Later') {
-                await markEnablePromptSeen(context);
+                await setDesiredMode(context, DESIRED_MODE_DEFERRED);
             }
             return;
         }
@@ -409,20 +404,19 @@ async function promptToEnableOnFirstRun(context, vscode) {
         return;
     }
 
-    // 'Later' or dismiss: mark as seen so we do not re-prompt,
-    // but leave desiredMode unset so the status bar stays visible.
-    await markEnablePromptSeen(context);
+    // 'Later' or dismiss: set deferred so we do not re-prompt,
+    // but the status bar still shows the Enable action.
+    await setDesiredMode(context, DESIRED_MODE_DEFERRED);
 }
 
 async function syncDesiredStateOnStartup(context, vscode) {
     const status = collectStatus(statusOptions(vscode));
     const desiredMode = getDesiredMode(context);
-    const action = determineStartupAction(desiredMode, hasPromptedEnable(context), status);
+    const action = determineStartupAction(desiredMode, status);
 
     switch (action) {
         case 'adopt-enabled':
             await setDesiredMode(context, DESIRED_MODE_ENABLED);
-            await markEnablePromptSeen(context);
             return;
 
         case 'prompt-enable':
@@ -516,6 +510,7 @@ module.exports = {
     activate,
     deactivate,
     __internal: {
+        DESIRED_MODE_DEFERRED,
         DESIRED_MODE_DISABLED,
         DESIRED_MODE_ENABLED,
         determineStartupAction,

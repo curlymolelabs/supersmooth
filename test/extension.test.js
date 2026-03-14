@@ -6,49 +6,51 @@ const { __internal } = require('../src/extension');
 (function run() {
     const enabled = __internal.DESIRED_MODE_ENABLED;
     const disabled = __internal.DESIRED_MODE_DISABLED;
+    const deferred = __internal.DESIRED_MODE_DEFERRED;
 
     assert.equal(__internal.describeDesiredMode(enabled), 'enabled');
     assert.equal(__internal.describeDesiredMode(disabled), 'disabled');
+    assert.equal(__internal.describeDesiredMode(deferred), 'deferred');
     assert.equal(__internal.describeDesiredMode(''), 'not active yet');
 
     assert.equal(
-        __internal.determineStartupAction('', false, { ok: true, overallState: 'unpatched' }),
+        __internal.determineStartupAction('', { ok: true, overallState: 'unpatched' }),
         'prompt-enable'
     );
     assert.equal(
-        __internal.determineStartupAction('', true, { ok: true, overallState: 'unpatched' }),
+        __internal.determineStartupAction(deferred, { ok: true, overallState: 'unpatched' }),
         'noop'
     );
     assert.equal(
-        __internal.determineStartupAction('', false, { ok: true, overallState: 'patched' }),
+        __internal.determineStartupAction('', { ok: true, overallState: 'patched' }),
         'adopt-enabled'
     );
     assert.equal(
-        __internal.determineStartupAction(enabled, true, { ok: true, overallState: 'unpatched' }),
+        __internal.determineStartupAction(enabled, { ok: true, overallState: 'unpatched' }),
         'apply'
     );
     assert.equal(
-        __internal.determineStartupAction(enabled, true, { ok: true, overallState: 'patched' }),
+        __internal.determineStartupAction(enabled, { ok: true, overallState: 'patched' }),
         'noop'
     );
     assert.equal(
-        __internal.determineStartupAction(enabled, true, { ok: true, overallState: 'legacy' }),
+        __internal.determineStartupAction(enabled, { ok: true, overallState: 'legacy' }),
         'warn-legacy'
     );
     assert.equal(
-        __internal.determineStartupAction(enabled, true, { ok: true, overallState: 'unsupported' }),
+        __internal.determineStartupAction(enabled, { ok: true, overallState: 'unsupported' }),
         'show-unsupported'
     );
     assert.equal(
-        __internal.determineStartupAction(enabled, true, { ok: true, overallState: 'mixed' }),
+        __internal.determineStartupAction(enabled, { ok: true, overallState: 'mixed' }),
         'show-status'
     );
     assert.equal(
-        __internal.determineStartupAction(disabled, true, { ok: true, overallState: 'unpatched' }),
+        __internal.determineStartupAction(disabled, { ok: true, overallState: 'unpatched' }),
         'noop'
     );
     assert.equal(
-        __internal.determineStartupAction(enabled, true, { ok: false, overallState: 'unpatched' }),
+        __internal.determineStartupAction(enabled, { ok: false, overallState: 'unpatched' }),
         'noop'
     );
 
@@ -108,6 +110,9 @@ const { __internal } = require('../src/extension');
     };
     __internal.updateStatusBar(mockStatusBarItem, { ok: true, overallState: 'unpatched', installInfo: { ideVersion: '1.20.5' } }, '');
     assert.equal(mockStatusBarItem._visible, true, 'setup state should show status bar');
+    assert.match(mockStatusBarItem.text, /Enable/);
+    __internal.updateStatusBar(mockStatusBarItem, { ok: true, overallState: 'unpatched', installInfo: { ideVersion: '1.20.5' } }, deferred);
+    assert.equal(mockStatusBarItem._visible, true, 'deferred state should still show status bar');
     assert.match(mockStatusBarItem.text, /Enable/);
     __internal.updateStatusBar(mockStatusBarItem, { ok: true, overallState: 'unpatched', installInfo: { ideVersion: '1.20.5' } }, disabled);
     assert.equal(mockStatusBarItem._visible, false, 'disabled/inactive state should hide status bar');
