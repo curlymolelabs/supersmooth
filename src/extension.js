@@ -167,8 +167,8 @@ function activate(context) {
                 const opts = statusOptions(vscode);
                 const { detectInstallRoot } = require('./install');
                 const installRoot = detectInstallRoot(opts);
-                if (installRoot) {
-                    const ssDir = path.join(installRoot, '.supersmooth');
+                if (installRoot.basePath) {
+                    const ssDir = path.join(installRoot.basePath, '.supersmooth');
                     fs.mkdirSync(ssDir, { recursive: true });
                     fs.appendFileSync(path.join(ssDir, 'events.log'), entry);
                 }
