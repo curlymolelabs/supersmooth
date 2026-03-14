@@ -315,17 +315,28 @@ async function handleStatus(context, vscode) {
     const summary = getStatusSummary(status, desiredMode);
 
     switch (summary.kind) {
-        case 'setup':
+        case 'setup': {
+            const choice = await vscode.window.showInformationMessage(
+                summary.message,
+                'Enable Now',
+                'Later'
+            );
+            if (choice === 'Enable Now') {
+                await enableSupersmooth(context, vscode, { promptForConfirmation: false });
+            } else if (choice === 'Later') {
+                await markEnablePromptSeen(context);
+            }
+            return;
+        }
+
         case 'inactive': {
             const choice = await vscode.window.showInformationMessage(
                 summary.message,
-                'Enable Supersmooth',
-                'Not Now'
+                'Re-enable',
+                'Dismiss'
             );
-            if (choice === 'Enable Supersmooth') {
+            if (choice === 'Re-enable') {
                 await enableSupersmooth(context, vscode, { promptForConfirmation: false });
-            } else if (choice === 'Not Now') {
-                await markEnablePromptSeen(context);
             }
             return;
         }

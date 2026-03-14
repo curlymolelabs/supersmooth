@@ -311,15 +311,20 @@ function planPanelPatchForTarget(content) {
         exclude.add(excM[1]);
     }
 
-    // Primary: cleanup-return strategy (definitive for useEffect)
+    // Primary: cleanup-return strategy (definitive for useEffect).
+    // Cleanup returns override any memoRe exclusion because only useEffect
+    // returns cleanup functions. Always count these regardless of exclude set.
     const cleanupCandidates = {};
     const cleanupRe = /\b(\w{1,4})\(\(\)=>\{[\s\S]{1,500}?return\s*\(\)=>/g;
     let cm;
     while ((cm = cleanupRe.exec(wideRegion)) !== null) {
         const fn = cm[1];
-        if (!exclude.has(fn) || cleanupCandidates[fn]) {
-            // Cleanup returns are the definitive useEffect signal.
-            // Override any exclusion from memoRe since this pattern is stronger.
+        if (exclude.has(fn) && fn !== 'var' && fn !== 'new' && fn !== 'for' && fn !== 'if') {
+            // This function was flagged by memoRe but has cleanup-returns,
+            // meaning it is actually useEffect. Remove it from the exclusion set.
+            exclude.delete(fn);
+        }
+        if (!exclude.has(fn)) {
             cleanupCandidates[fn] = (cleanupCandidates[fn] || 0) + 1;
         }
     }

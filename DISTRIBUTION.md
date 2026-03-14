@@ -61,8 +61,8 @@ node bin/supersmooth.js revert --path "<path-to-clean-antigravity-copy>"
 Extension smoke test checklist:
 
 1. Install the `.vsix`
-2. Confirm beginners see either the first-run enable prompt or the `Supersmooth: Finish setup` status bar action
-3. Confirm `Supersmooth: Show Status` offers `Enable Supersmooth` instead of only showing `unpatched`
+2. Confirm beginners see the modal welcome dialog or the `Supersmooth: Enable` status bar action
+3. Confirm `Supersmooth: Show Status` offers `Enable Now` for setup state and `Re-enable` for disabled state
 4. Enable Supersmooth and fully quit/reopen Antigravity
 5. Confirm `Supersmooth: Disable Supersmooth` restores the original files
 6. Confirm `Supersmooth: Remove Cleanly` leaves the install clean before uninstall
@@ -191,7 +191,7 @@ Those fields improve trust and discoverability for extension users.
 - npm and Open VSX are independent. Publishing to one does not publish to the other.
 - Open VSX depends on the extension manifest fields such as `publisher`, `name`, `version`, and `engines.vscode`.
 - Supersmooth now separates extension installation from patch enablement. Release notes should explain the explicit enable and disable flow so testers know uninstall alone is not the cleanup step.
-- The intended beginner flow is: install, click `Enable Supersmooth`, fully quit/reopen, and use `Remove Cleanly` before uninstalling.
+- The intended beginner flow is: install, click `Enable Now` in the modal, fully quit/reopen, and use `Remove Cleanly` before uninstalling.
 - Real macOS and Linux machines should still be tested before making broad compatibility claims in the listing text.
 
 ## Official References
