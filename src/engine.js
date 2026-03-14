@@ -317,7 +317,13 @@ function applyPatch(options = {}) {
             fs.writeFileSync(plan.record.path, plan.patch.patchedContent);
         }
 
-        // Inject DOM script into workbench.html
+        // Inject DOM script into workbench.html (backup first)
+        const htmlPath = path.join(appRoot, WORKBENCH_HTML_PATH);
+        let htmlBackupPath = null;
+        if (fs.existsSync(htmlPath)) {
+            htmlBackupPath = path.join(backupRoot, 'workbench.html');
+            fs.copyFileSync(htmlPath, htmlBackupPath);
+        }
         const htmlResult = applyHtmlPatch(appRoot);
 
         // Build checksum entries (JS bundles + HTML if injected)
@@ -340,7 +346,11 @@ function applyPatch(options = {}) {
             appVersion: status.installInfo.appVersion,
             ideVersion: status.installInfo.ideVersion,
             files: {},
-            htmlPatch: htmlResult.ok ? { path: htmlResult.htmlPath, checksumKey: htmlResult.checksumKey } : null,
+            htmlPatch: htmlResult.ok ? {
+                path: htmlResult.htmlPath,
+                checksumKey: htmlResult.checksumKey,
+                backupPath: htmlBackupPath ? relativeToBase(status.basePath, htmlBackupPath) : null
+            } : null,
             productJson: {
                 backupPath: relativeToBase(status.basePath, productBackupPath),
                 currentSha256: sha256File(productPath)
@@ -407,9 +417,19 @@ function revertPatch(options = {}) {
         fs.copyFileSync(backupPath, activePath);
     }
 
-    // Remove HTML injection
+    // Restore workbench.html from backup (exact original) or fall back to regex cleanup
     const appRoot = appRootFromInstallRoot(status.basePath);
-    revertHtmlPatch(appRoot);
+    if (manifest.htmlPatch && manifest.htmlPatch.backupPath) {
+        const htmlBackup = path.join(status.basePath, manifest.htmlPatch.backupPath);
+        const htmlTarget = path.join(appRoot, WORKBENCH_HTML_PATH);
+        if (fs.existsSync(htmlBackup)) {
+            fs.copyFileSync(htmlBackup, htmlTarget);
+        } else {
+            revertHtmlPatch(appRoot);
+        }
+    } else {
+        revertHtmlPatch(appRoot);
+    }
 
     const productBackupPath = path.join(status.basePath, manifest.productJson.backupPath);
     fs.copyFileSync(productBackupPath, path.join(appRoot, 'product.json'));
