@@ -294,21 +294,52 @@ function planPanelPatchForTarget(content) {
     }
     const splitPoint = fullPatternIdx + splitPattern.length;
 
-    // ---- Find useEffect alias ----
+    // ---- Find useEffect alias (dynamic, no hardcoded exclusions) ----
     const wideRegion = content.substring(Math.max(0, anchorIdx - 100000), anchorIdx);
-    const hookPattern = /\b([a-zA-Z_$]\w{0,2})\(\(\)=>\{/g;
-    const aliasCounts = {};
-    let hm;
-    while ((hm = hookPattern.exec(wideRegion)) !== null) {
-        const name = hm[1];
-        if (name === 'xi' || name === 'Zt') continue;
-        aliasCounts[name] = (aliasCounts[name] || 0) + 1;
+
+    // Build exclusion set dynamically: detect useMemo aliases (return a value)
+    // and useCallback aliases (wrap a function reference). These are NOT useEffect.
+    const exclude = new Set(['var', 'new', 'for', 'if']);
+
+    // useMemo pattern: VAR=FN(()=>{...return ...},[...])  where the result is assigned
+    const memoRe = /\b(\w{1,4})\(\(\)=>\{[^}]*?return\s+[^)]+\},\[/g;
+    let excM;
+    while ((excM = memoRe.exec(wideRegion)) !== null) {
+        // useEffect also has returns (cleanup), so count carefully.
+        // useMemo returns are typically value expressions, not arrow functions.
+        // We gather candidates; the cleanup-return strategy below will pick the right one.
+        exclude.add(excM[1]);
+    }
+
+    // Primary: cleanup-return strategy (definitive for useEffect)
+    const cleanupCandidates = {};
+    const cleanupRe = /\b(\w{1,4})\(\(\)=>\{[\s\S]{1,500}?return\s*\(\)=>/g;
+    let cm;
+    while ((cm = cleanupRe.exec(wideRegion)) !== null) {
+        const fn = cm[1];
+        if (!exclude.has(fn) || cleanupCandidates[fn]) {
+            // Cleanup returns are the definitive useEffect signal.
+            // Override any exclusion from memoRe since this pattern is stronger.
+            cleanupCandidates[fn] = (cleanupCandidates[fn] || 0) + 1;
+        }
     }
 
     let useEffectAlias;
-    if (aliasCounts['fn']) {
-        useEffectAlias = 'fn';
+    if (Object.keys(cleanupCandidates).length > 0) {
+        // Pick the most frequent cleanup-return candidate
+        useEffectAlias = Object.entries(cleanupCandidates)
+            .sort((a, b) => b[1] - a[1])[0][0];
     } else {
+        // Fallback: frequency analysis excluding known non-effect hooks
+        const hookPattern = /\b([a-zA-Z_$]\w{0,2})\(\(\)=>\{/g;
+        const aliasCounts = {};
+        let hm;
+        while ((hm = hookPattern.exec(wideRegion)) !== null) {
+            const name = hm[1];
+            if (!exclude.has(name)) {
+                aliasCounts[name] = (aliasCounts[name] || 0) + 1;
+            }
+        }
         const sorted = Object.entries(aliasCounts).sort((a, b) => b[1] - a[1]);
         if (sorted.length === 0) {
             return { ok: false, reason: 'panel-useeffect-not-found' };

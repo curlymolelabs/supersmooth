@@ -55,18 +55,18 @@ function getStatusSummary(status, desiredMode) {
             if (desiredMode === DESIRED_MODE_ENABLED) {
                 return {
                     kind: 'repair',
-                    message: 'Supersmooth is supposed to be active, but this Antigravity installation is currently using the original files. Choose Restore Supersmooth to patch it again.'
+                    message: 'Antigravity updated and replaced the patched files. Choose Restore Supersmooth to re-apply.'
                 };
             }
             if (desiredMode === DESIRED_MODE_DISABLED) {
                 return {
                     kind: 'inactive',
-                    message: `Supersmooth is inactive on Antigravity ${status.installInfo.ideVersion}. Choose Enable Supersmooth any time to turn it back on.`
+                    message: `Supersmooth is disabled on Antigravity ${status.installInfo.ideVersion}. You can re-enable it any time from the Command Palette.`
                 };
             }
             return {
                 kind: 'setup',
-                message: `Supersmooth is installed but not active yet on Antigravity ${status.installInfo.ideVersion}. Choose Enable Supersmooth to finish setup. You will need one full quit and reopen afterward.`
+                message: `Supersmooth is ready on Antigravity ${status.installInfo.ideVersion}. Enable it to smooth your workflow. Requires one full quit and reopen.`
             };
 
         case 'patched':
@@ -121,8 +121,7 @@ function updateStatusBar(statusBarItem, status, desiredMode) {
     const summary = getStatusSummary(status, desiredMode);
     switch (summary.kind) {
         case 'setup':
-        case 'inactive':
-            statusBarItem.text = '$(rocket) Supersmooth: Finish setup';
+            statusBarItem.text = '$(rocket) Supersmooth: Enable';
             statusBarItem.tooltip = summary.message;
             statusBarItem.command = 'supersmooth.apply';
             statusBarItem.show();
@@ -139,12 +138,18 @@ function updateStatusBar(statusBarItem, status, desiredMode) {
             return;
 
         default:
+            // 'active', 'inactive', 'unsupported', 'error' -- hide status bar
             statusBarItem.hide();
     }
 }
 
-async function showFollowupMessage(vscode, message, buttons = []) {
-    const choice = await vscode.window.showInformationMessage(message, ...buttons);
+async function showFollowupMessage(vscode, message, buttons = [], options = {}) {
+    const useModal = options.modal !== false;
+    const choice = await vscode.window.showInformationMessage(
+        message,
+        useModal ? { modal: true } : {},
+        ...buttons
+    );
     if (choice === 'Open Extensions') {
         await vscode.commands.executeCommand('workbench.view.extensions');
     }
@@ -381,20 +386,21 @@ async function handleStatus(context, vscode) {
 }
 
 async function promptToEnableOnFirstRun(context, vscode) {
-    const choice = await vscode.window.showInformationMessage(
-        'Supersmooth is installed but not active yet. Enable it for this Antigravity installation now? This patches local app files and requires one full quit and reopen afterward.',
-        'Enable Supersmooth',
-        'Not Now'
+    const choice = await vscode.window.showWarningMessage(
+        'Supersmooth is ready. Enable it now to smooth your Antigravity workflow? This patches local app files and requires one full quit and reopen.',
+        { modal: true },
+        'Enable Now',
+        'Later'
     );
 
-    if (choice === 'Enable Supersmooth') {
+    if (choice === 'Enable Now') {
         await enableSupersmooth(context, vscode, { promptForConfirmation: false });
         return;
     }
 
-    if (choice === 'Not Now') {
-        await markEnablePromptSeen(context);
-    }
+    // 'Later' or dismiss: mark as seen so we do not re-prompt,
+    // but leave desiredMode unset so the status bar stays visible.
+    await markEnablePromptSeen(context);
 }
 
 async function syncDesiredStateOnStartup(context, vscode) {
@@ -485,7 +491,12 @@ function activate(context) {
     }));
 
     refreshUi();
-    void syncDesiredStateOnStartup(context, vscode).finally(refreshUi);
+    // Delay startup sync by 2 seconds so the welcome dialog appears
+    // after Antigravity's own "extension installed" toast clears.
+    const startupTimer = setTimeout(() => {
+        void syncDesiredStateOnStartup(context, vscode).finally(refreshUi);
+    }, 2000);
+    context.subscriptions.push({ dispose: () => clearTimeout(startupTimer) });
 }
 
 function deactivate() {}
@@ -498,6 +509,7 @@ module.exports = {
         DESIRED_MODE_ENABLED,
         determineStartupAction,
         describeDesiredMode,
-        getStatusSummary
+        getStatusSummary,
+        updateStatusBar
     }
 };

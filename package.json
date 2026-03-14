@@ -29,7 +29,7 @@
     "supersmooth": "./bin/supersmooth.js"
   },
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "contributes": {
     "commands": [

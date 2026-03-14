@@ -33,24 +33,22 @@ Requires Antigravity IDE version `1.20.5` or newer.
 1. Open Antigravity.
 2. Open the Extensions panel.
 3. Install `supersmooth-0.1.0.vsix`.
-4. Supersmooth should immediately guide you with one of these:
-   - a prompt that says Supersmooth is installed but not active yet
-   - a status bar action that says `Supersmooth: Finish setup`
-5. Choose `Enable Supersmooth`.
-6. Fully quit Antigravity and reopen it after enabling. A window reload is not enough.
+4. A modal dialog appears after a few seconds: "Supersmooth is ready. Enable it now?"
+5. Click **Enable Now**.
+6. Fully quit Antigravity and reopen it. A window reload is not enough.
 
-If Antigravity only shows its own generic Installed toast and nothing else, use either of these beginner-safe fallbacks:
+If you clicked **Later**, you can enable any time by:
 
-- click the `Supersmooth: Finish setup` status bar action if it is visible
-- run `Supersmooth: Show Status` and choose `Enable Supersmooth`
+- clicking the `Supersmooth: Enable` status bar action
+- running `Supersmooth: Show Status` from the Command Palette
 
 ### Option B: Install from Open VSX
 
-If Supersmooth is published, the runtime flow is the same:
+If Supersmooth is published, the flow is the same:
 
 1. Install the extension.
-2. Follow the setup prompt or the `Supersmooth: Finish setup` status bar action.
-3. Fully quit and reopen Antigravity after enabling.
+2. Click **Enable Now** in the modal dialog that appears.
+3. Fully quit and reopen Antigravity.
 
 ### Option C: CLI
 
@@ -69,7 +67,7 @@ If you use the CLI, fully quit and reopen Antigravity after `apply` or `revert`.
 Once Supersmooth has been enabled for an installation, the extension remembers that choice.
 
 - if Antigravity starts with the patched files still present, Supersmooth stays quiet
-- if Antigravity updates and replaces the patched files, Supersmooth re-applies them on startup
+- if Antigravity updates and replaces the patched files, Supersmooth re-applies them and shows a modal asking you to quit and reopen
 - if you disable Supersmooth, it stays disabled and will not silently re-patch on the next launch
 
 ## Clean Disable And Uninstall
@@ -114,11 +112,10 @@ Supersmooth is designed to be reversible:
 - it updates only the relevant integrity checksums
 - it validates patched JavaScript before writing bundle changes
 
-Two practical notes matter for UX:
+Two practical notes:
 
 - a full quit and reopen is safer than `Reload Window` after patch changes
-- uninstalling the extension is not the cleanup step; disabling is the cleanup step
-- beginners should not need to interpret `patched` or `unpatched`; the prompt, status bar, and `Show Status` command are meant to guide the next step directly
+- uninstalling the extension is not the cleanup step; disabling via `Remove Cleanly` is the cleanup step
 
 ## Packaging
 

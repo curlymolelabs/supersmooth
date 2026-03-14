@@ -57,21 +57,21 @@ const { __internal } = require('../src/extension');
         ''
     );
     assert.equal(setupSummary.kind, 'setup');
-    assert.match(setupSummary.message, /installed but not active yet/i);
+    assert.match(setupSummary.message, /ready on Antigravity/i);
 
     const inactiveSummary = __internal.getStatusSummary(
         { ok: true, overallState: 'unpatched', installInfo: { ideVersion: '1.20.5' } },
         disabled
     );
     assert.equal(inactiveSummary.kind, 'inactive');
-    assert.match(inactiveSummary.message, /inactive/i);
+    assert.match(inactiveSummary.message, /disabled/i);
 
     const repairSummary = __internal.getStatusSummary(
         { ok: true, overallState: 'unpatched', installInfo: { ideVersion: '1.20.5' } },
         enabled
     );
     assert.equal(repairSummary.kind, 'repair');
-    assert.match(repairSummary.message, /Restore Supersmooth|patch it again/i);
+    assert.match(repairSummary.message, /Restore Supersmooth|re-apply/i);
 
     const activeSummary = __internal.getStatusSummary(
         { ok: true, overallState: 'patched', installInfo: { ideVersion: '1.20.5' } },
@@ -99,6 +99,18 @@ const { __internal } = require('../src/extension');
     );
     assert.equal(errorSummary.kind, 'error');
     assert.match(errorSummary.message, /could not inspect/i);
+
+    // Status bar: 'setup' shows the bar, 'inactive' hides it
+    const mockStatusBarItem = {
+        text: '', tooltip: '', command: '', _visible: false,
+        show() { this._visible = true; },
+        hide() { this._visible = false; }
+    };
+    __internal.updateStatusBar(mockStatusBarItem, { ok: true, overallState: 'unpatched', installInfo: { ideVersion: '1.20.5' } }, '');
+    assert.equal(mockStatusBarItem._visible, true, 'setup state should show status bar');
+    assert.match(mockStatusBarItem.text, /Enable/);
+    __internal.updateStatusBar(mockStatusBarItem, { ok: true, overallState: 'unpatched', installInfo: { ideVersion: '1.20.5' } }, disabled);
+    assert.equal(mockStatusBarItem._visible, false, 'disabled/inactive state should hide status bar');
 
     console.log('All Supersmooth extension tests passed.');
 })();
