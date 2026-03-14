@@ -1,6 +1,6 @@
 # Supersmooth
 
-Supersmooth smooths out the Antigravity approval flow, but it now does so with an explicit enable and disable model.
+Supersmooth smooths out the Antigravity approval flow with an explicit enable and disable model.
 
 The extension can patch local Antigravity files to:
 
@@ -24,8 +24,6 @@ Supersmooth is installed separately from the on-disk patch. That distinction is 
 | macOS | Beta |
 | Linux | Beta |
 
-Requires Antigravity IDE version `1.20.5` or newer.
-
 ## Install Flow
 
 ### Option A: Install from VSIX
@@ -33,9 +31,9 @@ Requires Antigravity IDE version `1.20.5` or newer.
 1. Open Antigravity.
 2. Open the Extensions panel.
 3. Install `supersmooth-0.1.0.vsix`.
-4. A modal dialog appears after a few seconds: "Supersmooth is ready. Enable it now?"
+4. A modal dialog appears after a few seconds asking whether to enable now or later.
 5. Click **Enable Now**.
-6. Fully quit Antigravity and reopen it. A window reload is not enough.
+6. A modal confirmation tells you to fully quit and reopen Antigravity. A window reload is not enough.
 
 If you clicked **Later**, you can enable any time by:
 
@@ -70,27 +68,27 @@ Once Supersmooth has been enabled for an installation, the extension remembers t
 - if Antigravity updates and replaces the patched files, Supersmooth re-applies them and shows a modal asking you to quit and reopen
 - if you disable Supersmooth, it stays disabled and will not silently re-patch on the next launch
 
-## Clean Disable And Uninstall
+## Clean Disable and Uninstall
 
 The smooth removal flow is:
 
 1. Open the Command Palette.
 2. Run `Supersmooth: Remove Cleanly`.
-3. Let Supersmooth restore the original files.
-4. Fully quit Antigravity and reopen it to load the restored files.
+3. Confirm in the modal dialog. Supersmooth restores the original files.
+4. A modal confirmation tells you to fully quit and reopen Antigravity.
 5. Uninstall the extension from the Extensions panel whenever you are ready.
 
-You can also run `Supersmooth: Disable Supersmooth` if you want to keep the extension installed but inactive.
+You can also run `Supersmooth: Disable Supersmooth` to keep the extension installed but inactive. Once disabled, the extension stays quiet and does not re-patch on launch.
 
 ## Commands
 
 | Command | What it does |
 |---------|---------------|
-| `Supersmooth: Show Status` | Opens guided setup or health actions for this install instead of only showing raw patch state |
+| `Supersmooth: Show Status` | Guided wizard: offers **Enable Now** / **Later** for new installs, **Re-enable** / **Dismiss** for disabled installs, and health actions for active installs |
 | `Supersmooth: Enable Supersmooth` | Patches the local Antigravity files and marks Supersmooth as enabled |
 | `Supersmooth: Disable Supersmooth` | Restores the original files and marks Supersmooth as disabled |
-| `Supersmooth: Remove Cleanly` | Disables Supersmooth, restores the original files, and helps you finish uninstalling |
-| `Supersmooth: Verify Installation` | Checks the current patched state and checksum integrity |
+| `Supersmooth: Remove Cleanly` | Disables Supersmooth, restores original files, and offers to open the Extensions panel for uninstall |
+| `Supersmooth: Verify Installation` | Checks the patched state and checksum integrity |
 
 ## CLI Reference
 
