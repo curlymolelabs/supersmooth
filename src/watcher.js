@@ -14,9 +14,16 @@
 const fs = require('fs');
 const path = require('path');
 const { applyPatch, collectStatus } = require('./engine');
+const { WORKBENCH_HTML_PATH } = require('./support');
 
 /** Debounce window (ms). Antigravity writes may take a moment to complete. */
-const DEBOUNCE_MS = 3000;
+const DEBOUNCE_MS = 5000;
+
+/** Max retries when applyPatch returns unsafe-state (staggered file updates). */
+const MAX_RETRIES = 3;
+
+/** Delay between retries (ms). */
+const RETRY_DELAY_MS = 2000;
 
 /**
  * Watch target files and auto-repatch when they change.
@@ -45,23 +52,48 @@ function watchAndRepatch(options = {}, extra = {}) {
         path: path.join(appRoot, target.relativePath)
     }));
 
+    // Also watch workbench.html for DOM injection
+    const htmlWatchPath = path.join(appRoot, WORKBENCH_HTML_PATH);
+    if (fs.existsSync(htmlWatchPath)) {
+        filesToWatch.push({ label: 'workbench.html', path: htmlWatchPath });
+    }
+
     const watchers = [];
-    const timers = {};
+    // Install-level debounce: any file change cancels all in-flight timers
+    let repatchTimer = null;
+    let retryTimer = null;
+
+    function cancelTimers() {
+        if (repatchTimer) { clearTimeout(repatchTimer); repatchTimer = null; }
+        if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+    }
+
+    function attemptRepatch(attempt) {
+        const ts = new Date().toISOString().substring(11, 19);
+        const result = applyPatch(options);
+
+        if (result.ok) {
+            log(`[${ts}] [watch] Re-patched successfully (${result.code})`);
+            return;
+        }
+
+        // Retry on unsafe-state (staggered file updates, files still settling)
+        if (result.code === 'unsafe-state' && attempt < MAX_RETRIES) {
+            log(`[${ts}] [watch] State is ${result.code}, retry ${attempt + 1}/${MAX_RETRIES} in ${RETRY_DELAY_MS}ms`);
+            retryTimer = setTimeout(() => attemptRepatch(attempt + 1), RETRY_DELAY_MS);
+            return;
+        }
+
+        log(`[${ts}] [watch] FAILED (${result.code}: ${result.message})`);
+    }
 
     function onFileEvent(file) {
-        if (timers[file.label]) clearTimeout(timers[file.label]);
-        timers[file.label] = setTimeout(() => {
+        cancelTimers();
+        repatchTimer = setTimeout(() => {
             if (!fs.existsSync(file.path)) return;
-
             const ts = new Date().toISOString().substring(11, 19);
             log(`[${ts}] [watch] ${file.label} changed, re-patching...`);
-
-            const result = applyPatch(options);
-            if (result.ok) {
-                log(`[${ts}] [watch] ${file.label}: ${result.code}`);
-            } else {
-                log(`[${ts}] [watch] ${file.label}: FAILED (${result.code}: ${result.message})`);
-            }
+            attemptRepatch(0);
         }, DEBOUNCE_MS);
     }
 
@@ -88,8 +120,8 @@ function watchAndRepatch(options = {}, extra = {}) {
     }
 
     const cleanup = () => {
+        cancelTimers();
         for (const w of watchers) w.close();
-        for (const t of Object.values(timers)) clearTimeout(t);
         log('[watch] Stopped');
     };
 

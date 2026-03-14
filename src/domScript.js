@@ -63,9 +63,13 @@ function buildDomScript() {
     // Polls the DOM for matching buttons in approval dialogs.
     // Safety: only clicks if a sibling button has reject-type text.
     // ===================================================================
+    var APPROVAL_CONTAINERS = [
+        '.notifications-toasts',
+        '.monaco-dialog-box'
+    ];
     var CLICK_PATTERNS = [
         'Allow', 'Always Allow', 'Run', 'Keep Waiting',
-        'Accept', 'Retry', 'Continue', 'Allow Once'
+        'Accept', 'Retry', 'Allow Once'
     ];
     var REJECT_WORDS = [
         'Reject', 'Deny', 'Cancel', 'Dismiss', "Don't Allow", 'Decline'
@@ -109,9 +113,17 @@ function buildDomScript() {
     }
 
     setInterval(function() {
-        var clickables = document.querySelectorAll(
-            'button, a.action-label, [role="button"], .monaco-button'
-        );
+        // Only scan inside approval containers (notifications + modal dialogs)
+        var clickables = [];
+        for (var ci = 0; ci < APPROVAL_CONTAINERS.length; ci++) {
+            var containers = document.querySelectorAll(APPROVAL_CONTAINERS[ci]);
+            for (var cj = 0; cj < containers.length; cj++) {
+                var btns = containers[cj].querySelectorAll(
+                    'button, a.action-label, [role="button"], .monaco-button'
+                );
+                for (var bk = 0; bk < btns.length; bk++) clickables.push(btns[bk]);
+            }
+        }
         for (var i = 0; i < clickables.length; i++) {
             var b = clickables[i];
             if (b.offsetParent === null) continue;

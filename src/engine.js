@@ -306,6 +306,8 @@ function applyPatch(options = {}) {
     fs.copyFileSync(productPath, productBackupPath);
 
     const backupEntries = [];
+    const htmlPath = path.join(appRoot, WORKBENCH_HTML_PATH);
+    let htmlBackupPath = null;
     try {
         for (const plan of plans) {
             const backupPath = buildBackupPath(backupRoot, plan.record);
@@ -318,8 +320,6 @@ function applyPatch(options = {}) {
         }
 
         // Inject DOM script into workbench.html (backup first)
-        const htmlPath = path.join(appRoot, WORKBENCH_HTML_PATH);
-        let htmlBackupPath = null;
         if (fs.existsSync(htmlPath)) {
             htmlBackupPath = path.join(backupRoot, 'workbench.html');
             fs.copyFileSync(htmlPath, htmlBackupPath);

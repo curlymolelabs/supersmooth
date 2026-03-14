@@ -135,5 +135,51 @@ function createFakeInstall(appRoot, versions = {}) {
     const watcher = require('../src/watcher');
     assert.equal(typeof watcher.watchAndRepatch, 'function');
 
+    // ===================================================================
+    // DOM script structural tests
+    // ===================================================================
+    const { buildDomScript } = require('../src/domScript');
+    const domOutput = buildDomScript();
+
+    // Container scoping: must scan inside specific containers, not globally
+    assert.ok(domOutput.includes('APPROVAL_CONTAINERS'), 'DOM script should define APPROVAL_CONTAINERS');
+    assert.ok(domOutput.includes('.notifications-toasts'), 'DOM script should scope to notification toasts');
+    assert.ok(domOutput.includes('.monaco-dialog-box'), 'DOM script should scope to modal dialogs');
+
+    // Pattern safety: Continue should NOT be in click patterns
+    // Extract the CLICK_PATTERNS array content from the script
+    const patternsMatch = domOutput.match(/CLICK_PATTERNS\s*=\s*\[([\s\S]*?)\]/);
+    assert.ok(patternsMatch, 'DOM script should define CLICK_PATTERNS');
+    const patternsContent = patternsMatch[1];
+    assert.ok(!patternsContent.includes("'Continue'"), 'CLICK_PATTERNS should not include Continue');
+    assert.ok(patternsContent.includes("'Allow'"), 'CLICK_PATTERNS should include Allow');
+    assert.ok(patternsContent.includes("'Retry'"), 'CLICK_PATTERNS should include Retry');
+    assert.ok(patternsContent.includes("'Run'"), 'CLICK_PATTERNS should include Run');
+
+    // ===================================================================
+    // Engine htmlBackupPath scope test
+    // ===================================================================
+    // Verify that htmlBackupPath is declared before the try block by checking
+    // the source code structure. If it were inside try, the catch block would
+    // throw ReferenceError at runtime.
+    const engineSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'engine.js'), 'utf8');
+    const tryIndex = engineSource.indexOf('try {', engineSource.indexOf('const backupEntries'));
+    const htmlBackupDeclIndex = engineSource.indexOf('let htmlBackupPath');
+    assert.ok(htmlBackupDeclIndex < tryIndex, 'htmlBackupPath must be declared before the try block');
+
+    // ===================================================================
+    // Watcher module structure tests
+    // ===================================================================
+    // Verify watcher imports WORKBENCH_HTML_PATH for HTML watch coverage
+    const watcherSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'watcher.js'), 'utf8');
+    assert.ok(watcherSource.includes('WORKBENCH_HTML_PATH'), 'Watcher should import WORKBENCH_HTML_PATH');
+    assert.ok(watcherSource.includes('workbench.html'), 'Watcher should add workbench.html to watch set');
+    // Verify install-level debounce (single timer, not per-file map)
+    assert.ok(!watcherSource.includes('timers['), 'Watcher should not use per-file timer map');
+    assert.ok(watcherSource.includes('repatchTimer'), 'Watcher should use install-level repatchTimer');
+    // Verify retry logic exists
+    assert.ok(watcherSource.includes('MAX_RETRIES'), 'Watcher should define MAX_RETRIES');
+    assert.ok(watcherSource.includes('unsafe-state'), 'Watcher should retry on unsafe-state');
+
     console.log('All Supersmooth tests passed.');
 })();
