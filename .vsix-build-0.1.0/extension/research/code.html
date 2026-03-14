@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SuperSmooth Logo - Deep Night Edition</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+        :root {
+            --deep-night-bg: #0a0c12;
+            --logo-container-bg: #1c1f2e;
+            --logo-stroke: #f8fafc;
+        }
+        body {
+            background: radial-gradient(circle at center, #161a29 0%, #0a0c12 100%);
+        }
+        .textured-bg::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.02;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center textured-bg overflow-hidden">
+<main class="relative z-10" data-purpose="logo-presentation">
+<div class="bg-[var(--logo-container-bg)] rounded-[4rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] flex items-center justify-center w-[640px] h-[640px] transition-all duration-700 hover:scale-[1.02]" data-purpose="logo-container">
+<div class="w-2/3 h-2/3">
+<svg aria-labelledby="logoTitle" class="w-full h-full" role="img" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<title id="logoTitle">SuperSmooth Minimalist Logo</title>
+<path d="M40,100 C40,60 80,40 100,100 C120,160 160,140 160,100 C160,60 120,40 100,100 C80,160 40,140 40,100 Z" fill="none" stroke="var(--logo-stroke)" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"></path>
+</svg>
+</div>
+</div>
+</main>
+
+</body></html>

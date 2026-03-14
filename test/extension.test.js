@@ -1,0 +1,104 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const { __internal } = require('../src/extension');
+
+(function run() {
+    const enabled = __internal.DESIRED_MODE_ENABLED;
+    const disabled = __internal.DESIRED_MODE_DISABLED;
+
+    assert.equal(__internal.describeDesiredMode(enabled), 'enabled');
+    assert.equal(__internal.describeDesiredMode(disabled), 'disabled');
+    assert.equal(__internal.describeDesiredMode(''), 'not active yet');
+
+    assert.equal(
+        __internal.determineStartupAction('', false, { ok: true, overallState: 'unpatched' }),
+        'prompt-enable'
+    );
+    assert.equal(
+        __internal.determineStartupAction('', true, { ok: true, overallState: 'unpatched' }),
+        'noop'
+    );
+    assert.equal(
+        __internal.determineStartupAction('', false, { ok: true, overallState: 'patched' }),
+        'adopt-enabled'
+    );
+    assert.equal(
+        __internal.determineStartupAction(enabled, true, { ok: true, overallState: 'unpatched' }),
+        'apply'
+    );
+    assert.equal(
+        __internal.determineStartupAction(enabled, true, { ok: true, overallState: 'patched' }),
+        'noop'
+    );
+    assert.equal(
+        __internal.determineStartupAction(enabled, true, { ok: true, overallState: 'legacy' }),
+        'warn-legacy'
+    );
+    assert.equal(
+        __internal.determineStartupAction(enabled, true, { ok: true, overallState: 'unsupported' }),
+        'show-unsupported'
+    );
+    assert.equal(
+        __internal.determineStartupAction(enabled, true, { ok: true, overallState: 'mixed' }),
+        'show-status'
+    );
+    assert.equal(
+        __internal.determineStartupAction(disabled, true, { ok: true, overallState: 'unpatched' }),
+        'noop'
+    );
+    assert.equal(
+        __internal.determineStartupAction(enabled, true, { ok: false, overallState: 'unpatched' }),
+        'noop'
+    );
+
+    const setupSummary = __internal.getStatusSummary(
+        { ok: true, overallState: 'unpatched', installInfo: { ideVersion: '1.20.5' } },
+        ''
+    );
+    assert.equal(setupSummary.kind, 'setup');
+    assert.match(setupSummary.message, /installed but not active yet/i);
+
+    const inactiveSummary = __internal.getStatusSummary(
+        { ok: true, overallState: 'unpatched', installInfo: { ideVersion: '1.20.5' } },
+        disabled
+    );
+    assert.equal(inactiveSummary.kind, 'inactive');
+    assert.match(inactiveSummary.message, /inactive/i);
+
+    const repairSummary = __internal.getStatusSummary(
+        { ok: true, overallState: 'unpatched', installInfo: { ideVersion: '1.20.5' } },
+        enabled
+    );
+    assert.equal(repairSummary.kind, 'repair');
+    assert.match(repairSummary.message, /Restore Supersmooth|patch it again/i);
+
+    const activeSummary = __internal.getStatusSummary(
+        { ok: true, overallState: 'patched', installInfo: { ideVersion: '1.20.5' } },
+        enabled
+    );
+    assert.equal(activeSummary.kind, 'active');
+    assert.match(activeSummary.message, /active on Antigravity/i);
+
+    const attentionSummary = __internal.getStatusSummary(
+        { ok: true, overallState: 'mixed', installInfo: { ideVersion: '1.20.5' } },
+        enabled
+    );
+    assert.equal(attentionSummary.kind, 'attention');
+    assert.match(attentionSummary.message, /needs attention/i);
+
+    const unsupportedSummary = __internal.getStatusSummary(
+        { ok: true, overallState: 'unsupported', installInfo: { ideVersion: '1.20.5' } },
+        enabled
+    );
+    assert.equal(unsupportedSummary.kind, 'unsupported');
+
+    const errorSummary = __internal.getStatusSummary(
+        { ok: false, message: 'Antigravity installation not found.' },
+        ''
+    );
+    assert.equal(errorSummary.kind, 'error');
+    assert.match(errorSummary.message, /could not inspect/i);
+
+    console.log('All Supersmooth extension tests passed.');
+})();

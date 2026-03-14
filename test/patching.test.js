@@ -5,10 +5,15 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const vm = require('node:vm');
-const { syntaxCheckText } = require('../src/engine');
+const { applyPatch, syntaxCheckText, verifyInstallation } = require('../src/engine');
 const { appRootFromInstallRoot, normalizeInstallRoot } = require('../src/install');
 const { LEGACY_MARKER, SUPER_MARKER, classifyTargetState, planPatchForTarget } = require('../src/patching');
-const { SUPPORTED_PROFILES, findMatchingProfile } = require('../src/support');
+const {
+    SUPPORTED_PROFILES,
+    WORKBENCH_HTML_CHECKSUM_KEY,
+    WORKBENCH_HTML_PATH,
+    findMatchingProfile
+} = require('../src/support');
 
 const workbenchFixture = [
     "'use strict';",
@@ -44,15 +49,33 @@ function parsesAsJavaScript(filename, content) {
     vm.runInNewContext(content, {}, { filename });
 }
 
-function createFakeInstall(appRoot, versions = {}) {
+function createFakeInstall(appRoot, versions = {}, contents = {}) {
     const appVersion = versions.appVersion || '1.107.0';
     const ideVersion = versions.ideVersion || '1.20.5';
     fs.mkdirSync(path.join(appRoot, 'out', 'vs', 'workbench'), { recursive: true });
     fs.mkdirSync(path.join(appRoot, 'out', 'jetskiAgent'), { recursive: true });
+    fs.mkdirSync(path.join(appRoot, 'out', 'vs', 'code', 'electron-browser', 'workbench'), { recursive: true });
     fs.writeFileSync(path.join(appRoot, 'package.json'), JSON.stringify({ version: appVersion }, null, 2));
-    fs.writeFileSync(path.join(appRoot, 'product.json'), JSON.stringify({ ideVersion, checksums: {} }, null, 2));
-    fs.writeFileSync(path.join(appRoot, 'out', 'vs', 'workbench', 'workbench.desktop.main.js'), '// fake workbench');
-    fs.writeFileSync(path.join(appRoot, 'out', 'jetskiAgent', 'main.js'), '// fake jetski');
+    fs.writeFileSync(path.join(appRoot, 'product.json'), JSON.stringify({
+        ideVersion,
+        checksums: {
+            'vs/workbench/workbench.desktop.main.js': 'initial-workbench',
+            'jetskiAgent/main.js': 'initial-jetski',
+            [WORKBENCH_HTML_CHECKSUM_KEY]: 'initial-html'
+        }
+    }, null, 2));
+    fs.writeFileSync(
+        path.join(appRoot, 'out', 'vs', 'workbench', 'workbench.desktop.main.js'),
+        contents.workbenchJs || '// fake workbench'
+    );
+    fs.writeFileSync(
+        path.join(appRoot, 'out', 'jetskiAgent', 'main.js'),
+        contents.jetskiJs || '// fake jetski'
+    );
+    fs.writeFileSync(
+        path.join(appRoot, WORKBENCH_HTML_PATH),
+        contents.workbenchHtml || '<!DOCTYPE html><html><body><div id="app"></div></body></html>'
+    );
 }
 
 (function run() {
@@ -107,6 +130,20 @@ function createFakeInstall(appRoot, versions = {}) {
         assert.equal(normalizeInstallRoot(path.join(linuxInstallRoot, 'resources')), linuxInstallRoot);
         assert.equal(normalizeInstallRoot(linuxAppRoot), linuxInstallRoot);
         assert.equal(appRootFromInstallRoot(linuxInstallRoot), linuxAppRoot);
+
+        const patchInstallRoot = path.join(tempRoot, 'patch-install');
+        const patchAppRoot = path.join(patchInstallRoot, 'resources', 'app');
+        createFakeInstall(patchAppRoot, {}, {
+            workbenchJs: workbenchFixture,
+            jetskiJs: jetskiFixture,
+            workbenchHtml: '<!DOCTYPE html><html><body><div id="app"></div></body></html>'
+        });
+        const applyResult = applyPatch({ explicitPath: patchInstallRoot });
+        assert.equal(applyResult.ok, true);
+        const verifyResult = verifyInstallation({ explicitPath: patchInstallRoot });
+        assert.equal(verifyResult.ok, true, verifyResult.message);
+        const patchedHtml = fs.readFileSync(path.join(patchAppRoot, WORKBENCH_HTML_PATH), 'utf8');
+        assert.ok(patchedHtml.includes('SUPERSMOOTH-START'), 'workbench.html should contain the DOM script marker');
     } finally {
         fs.rmSync(tempRoot, { recursive: true, force: true });
     }
