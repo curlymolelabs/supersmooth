@@ -2,6 +2,15 @@
 
 All notable changes to the Supersmooth extension will be documented in this file.
 
+## 0.1.1 (2026-03-15)
+
+### Bug Fixes
+
+- Fix welcome modal not appearing on Extensions panel install when stale globalState exists from a previous install cycle
+- Universal stale-state detection: any saved mode (deferred, disabled, enabled) with unpatched files and no manifest on disk is now treated as a fresh install
+
+---
+
 ## 0.1.0 (2026-03-14)
 
 Initial release.

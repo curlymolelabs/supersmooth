@@ -1,6 +1,6 @@
 {
   "name": "supersmooth",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Smooth Antigravity workflow with explicit enable and disable controls for local patching.",
   "license": "MIT",
   "icon": "icon.png",
