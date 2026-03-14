@@ -17,17 +17,29 @@ const { __internal } = require('../src/extension');
         __internal.determineStartupAction('', { ok: true, overallState: 'unpatched' }),
         'prompt-enable'
     );
+    // Deferred with manifest present: user clicked "Later" deliberately. Stay quiet.
     assert.equal(
-        __internal.determineStartupAction(deferred, { ok: true, overallState: 'unpatched' }),
+        __internal.determineStartupAction(deferred, { ok: true, overallState: 'unpatched', manifest: { version: 1 } }),
         'noop'
+    );
+    // Stale deferred state: no manifest, desiredMode survived uninstall/reinstall. Re-prompt.
+    assert.equal(
+        __internal.determineStartupAction(deferred, { ok: true, overallState: 'unpatched', manifest: null }),
+        'prompt-enable'
     );
     assert.equal(
         __internal.determineStartupAction('', { ok: true, overallState: 'patched' }),
         'adopt-enabled'
     );
+    // Enabled with manifest present: Antigravity updated, need to re-apply.
     assert.equal(
-        __internal.determineStartupAction(enabled, { ok: true, overallState: 'unpatched' }),
+        __internal.determineStartupAction(enabled, { ok: true, overallState: 'unpatched', manifest: { version: 1 } }),
         'apply'
+    );
+    // Stale enabled state: no manifest, desiredMode survived uninstall/reinstall. Re-prompt.
+    assert.equal(
+        __internal.determineStartupAction(enabled, { ok: true, overallState: 'unpatched', manifest: null }),
+        'prompt-enable'
     );
     assert.equal(
         __internal.determineStartupAction(enabled, { ok: true, overallState: 'patched' }),
