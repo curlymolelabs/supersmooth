@@ -3,9 +3,18 @@
 const path = require('path');
 
 const SUPER_MARKER = '/*SUPERSMOOTH:autorun*/';
+const PANEL_MARKER = '/*SUPERSMOOTH:panel*/';
 const LEGACY_MARKER = '/*AGFIX:autorun*/';
 const SUPER_DIR = '.supersmooth';
 const MANIFEST_VERSION = 1;
+
+/**
+ * Relative path to the workbench HTML file within appRoot.
+ * Used for DOM script injection (separate from JS bundle patching).
+ */
+const WORKBENCH_HTML_PATH = path.join(
+    'out', 'vs', 'code', 'electron-browser', 'workbench', 'workbench.html'
+);
 
 /**
  * Supported build profiles.
@@ -93,9 +102,11 @@ function compareVersions(a, b) {
 module.exports = {
     LEGACY_MARKER,
     MANIFEST_VERSION,
+    PANEL_MARKER,
     SUPER_DIR,
     SUPER_MARKER,
     SUPPORTED_PROFILES,
+    WORKBENCH_HTML_PATH,
     findMatchingProfile,
     compareVersions
 };

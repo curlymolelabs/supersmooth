@@ -43,7 +43,8 @@ async function handleApply(vscode) {
         return;
     }
 
-    await promptRestart(vscode, 'Supersmooth applied! Close and reopen Antigravity to activate.');
+    await vscode.window.showInformationMessage('Supersmooth applied! Reloading...');
+    setTimeout(() => vscode.commands.executeCommand('workbench.action.reloadWindow'), 1000);
 }
 
 async function handleRevert(vscode) {
@@ -91,7 +92,8 @@ async function autoApplyOnStartup(vscode) {
         case 'unpatched': {
             const result = applyPatch(statusOptions(vscode));
             if (result.ok) {
-                await promptRestart(vscode, 'SuperSmooth Installed! Close and reopen Antigravity to activate.');
+                await vscode.window.showInformationMessage('Supersmooth applied! Reloading...');
+                setTimeout(() => vscode.commands.executeCommand('workbench.action.reloadWindow'), 1000);
             } else {
                 await vscode.window.showErrorMessage(`Supersmooth: Auto-apply failed. ${result.message}`);
             }

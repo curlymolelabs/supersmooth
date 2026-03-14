@@ -5,8 +5,9 @@ const path = require('path');
 const vm = require('node:vm');
 const { detectInstallRoot, readInstallInfo, appRootFromInstallRoot } = require('./install');
 const { checksumMatches, sha256File, updateChecksums } = require('./checksum');
-const { classifyTargetState, SUPER_MARKER, LEGACY_MARKER, planPatchForTarget } = require('./patching');
-const { MANIFEST_VERSION, SUPER_DIR, SUPPORTED_PROFILES, findMatchingProfile } = require('./support');
+const { classifyTargetState, SUPER_MARKER, PANEL_MARKER, LEGACY_MARKER, planPatchForTarget, planPanelPatchForTarget } = require('./patching');
+const { MANIFEST_VERSION, SUPER_DIR, SUPPORTED_PROFILES, WORKBENCH_HTML_PATH, findMatchingProfile } = require('./support');
+const { buildDomScript, DOM_TAG_START, DOM_TAG_END } = require('./domScript');
 
 function getSupportRoot(basePath) {
     return path.join(basePath, SUPER_DIR);
@@ -159,6 +160,66 @@ function buildBackupPath(backupRoot, record) {
     return path.join(backupRoot, `${record.key}-${record.activeSha256}${parsed.ext || '.bak'}`);
 }
 
+/**
+ * Inject DOM script into workbench.html via <script> tag between markers.
+ * Returns { ok, htmlPath, checksumKey } or { ok: false, reason }.
+ */
+function applyHtmlPatch(appRoot) {
+    const htmlPath = path.join(appRoot, WORKBENCH_HTML_PATH);
+    if (!fs.existsSync(htmlPath)) {
+        return { ok: false, reason: 'workbench.html not found at ' + htmlPath };
+    }
+
+    let html = fs.readFileSync(htmlPath, 'utf8');
+
+    // Remove any existing injection first
+    const tagRegex = new RegExp(
+        DOM_TAG_START.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
+        '[\\s\\S]*?' +
+        DOM_TAG_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+        'g'
+    );
+    html = html.replace(tagRegex, '');
+
+    // Inject before </html>
+    const script = buildDomScript();
+    const injection = `\n${DOM_TAG_START}\n<script>${script}</script>\n${DOM_TAG_END}`;
+    html = html.replace('</html>', injection + '\n</html>');
+
+    fs.writeFileSync(htmlPath, html, 'utf8');
+
+    // Derive the checksum key from the relative path (forward slashes)
+    const checksumKey = WORKBENCH_HTML_PATH.split(path.sep).join('/');
+
+    return { ok: true, htmlPath, checksumKey };
+}
+
+/**
+ * Remove DOM script injection from workbench.html.
+ */
+function revertHtmlPatch(appRoot) {
+    const htmlPath = path.join(appRoot, WORKBENCH_HTML_PATH);
+    if (!fs.existsSync(htmlPath)) {
+        return { ok: false, reason: 'workbench.html not found' };
+    }
+
+    let html = fs.readFileSync(htmlPath, 'utf8');
+    const tagRegex = new RegExp(
+        DOM_TAG_START.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
+        '[\\s\\S]*?' +
+        DOM_TAG_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+        'g'
+    );
+    const had = tagRegex.test(html);
+    if (had) {
+        html = html.replace(tagRegex, '');
+        fs.writeFileSync(htmlPath, html, 'utf8');
+    }
+
+    const checksumKey = WORKBENCH_HTML_PATH.split(path.sep).join('/');
+    return { ok: true, removed: had, htmlPath, checksumKey };
+}
+
 function applyPatch(options = {}) {
     const status = collectStatus(options);
     if (!status.ok) {
@@ -212,7 +273,15 @@ function applyPatch(options = {}) {
             };
         }
 
-        const syntax = syntaxCheckText(path.basename(record.path), patch.patchedContent);
+        // Chain the panel auto-expand patch on top of the autorun patch.
+        // Non-blocking: if anchor not found (e.g., jetskiAgent target), skip.
+        let finalContent = patch.patchedContent;
+        const panelPatch = planPanelPatchForTarget(finalContent);
+        if (panelPatch.ok) {
+            finalContent = panelPatch.patchedContent;
+        }
+
+        const syntax = syntaxCheckText(path.basename(record.path), finalContent);
         if (!syntax.ok) {
             return {
                 ok: false,
@@ -224,7 +293,7 @@ function applyPatch(options = {}) {
             };
         }
 
-        plans.push({ record, targetSpec, patch });
+        plans.push({ record, targetSpec, patch: { ...patch, patchedContent: finalContent } });
     }
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -248,10 +317,21 @@ function applyPatch(options = {}) {
             fs.writeFileSync(plan.record.path, plan.patch.patchedContent);
         }
 
-        const checksumResult = updateChecksums(status.basePath, plans.map(plan => ({
+        // Inject DOM script into workbench.html
+        const htmlResult = applyHtmlPatch(appRoot);
+
+        // Build checksum entries (JS bundles + HTML if injected)
+        const checksumEntries = plans.map(plan => ({
             checksumKey: plan.targetSpec.checksumKey,
             path: plan.record.path
-        })));
+        }));
+        if (htmlResult.ok) {
+            checksumEntries.push({
+                checksumKey: htmlResult.checksumKey,
+                path: htmlResult.htmlPath
+            });
+        }
+        const checksumResult = updateChecksums(status.basePath, checksumEntries);
 
         const manifest = {
             version: MANIFEST_VERSION,
@@ -260,6 +340,7 @@ function applyPatch(options = {}) {
             appVersion: status.installInfo.appVersion,
             ideVersion: status.installInfo.ideVersion,
             files: {},
+            htmlPatch: htmlResult.ok ? { path: htmlResult.htmlPath, checksumKey: htmlResult.checksumKey } : null,
             productJson: {
                 backupPath: relativeToBase(status.basePath, productBackupPath),
                 currentSha256: sha256File(productPath)
@@ -284,7 +365,7 @@ function applyPatch(options = {}) {
             status: collectStatus(options),
             checksumResult,
             manifest,
-            message: 'Supersmooth applied successfully. Restart Antigravity to load the patched bundles.'
+            message: 'Supersmooth applied successfully.'
         };
     } catch (error) {
         for (const entry of backupEntries) {
@@ -326,8 +407,12 @@ function revertPatch(options = {}) {
         fs.copyFileSync(backupPath, activePath);
     }
 
+    // Remove HTML injection
+    const appRoot = appRootFromInstallRoot(status.basePath);
+    revertHtmlPatch(appRoot);
+
     const productBackupPath = path.join(status.basePath, manifest.productJson.backupPath);
-    fs.copyFileSync(productBackupPath, path.join(appRootFromInstallRoot(status.basePath), 'product.json'));
+    fs.copyFileSync(productBackupPath, path.join(appRoot, 'product.json'));
     fs.rmSync(getManifestPath(status.basePath), { force: true });
 
     return {
