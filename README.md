@@ -48,18 +48,6 @@ If Supersmooth is published, the flow is the same:
 2. Click **Enable Now** in the modal dialog that appears.
 3. Fully quit and reopen Antigravity.
 
-### Option C: CLI
-
-The CLI patches files directly and does not manage extension state:
-
-```bash
-supersmooth status
-supersmooth apply
-supersmooth verify
-```
-
-If you use the CLI, fully quit and reopen Antigravity after `apply` or `revert`.
-
 ## Daily Use
 
 Once Supersmooth has been enabled for an installation, the extension remembers that choice.
@@ -89,17 +77,6 @@ You can also run `Supersmooth: Disable Supersmooth` to keep the extension instal
 | `Supersmooth: Disable Supersmooth` | Restores the original files and marks Supersmooth as disabled |
 | `Supersmooth: Remove Cleanly` | Disables Supersmooth, restores original files, and offers to open the Extensions panel for uninstall |
 | `Supersmooth: Verify Installation` | Checks the patched state and checksum integrity |
-
-## CLI Reference
-
-```bash
-supersmooth status
-supersmooth apply
-supersmooth revert
-supersmooth verify
-supersmooth watch
-supersmooth apply --force
-```
 
 ## Safety Notes
 
