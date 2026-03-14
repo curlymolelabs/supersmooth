@@ -6,13 +6,13 @@
   "icon": "icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/curly-mole-labs/supersmooth"
+    "url": "https://github.com/curlymolelabs/supersmooth"
   },
-  "homepage": "https://github.com/curly-mole-labs/supersmooth#readme",
+  "homepage": "https://github.com/curlymolelabs/supersmooth#readme",
   "bugs": {
-    "url": "https://github.com/curly-mole-labs/supersmooth/issues"
+    "url": "https://github.com/curlymolelabs/supersmooth/issues"
   },
-  "publisher": "curly-mole-labs",
+  "publisher": "curlymolelabs",
   "displayName": "Supersmooth",
   "categories": [
     "Other"
