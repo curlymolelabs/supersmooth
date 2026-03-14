@@ -203,17 +203,17 @@ function revertHtmlPatch(appRoot) {
         return { ok: false, reason: 'workbench.html not found' };
     }
 
-    let html = fs.readFileSync(htmlPath, 'utf8');
+    const html = fs.readFileSync(htmlPath, 'utf8');
     const tagRegex = new RegExp(
         DOM_TAG_START.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
         '[\\s\\S]*?' +
         DOM_TAG_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
         'g'
     );
-    const had = tagRegex.test(html);
+    const cleaned = html.replace(tagRegex, '');
+    const had = cleaned !== html;
     if (had) {
-        html = html.replace(tagRegex, '');
-        fs.writeFileSync(htmlPath, html, 'utf8');
+        fs.writeFileSync(htmlPath, cleaned, 'utf8');
     }
 
     const checksumKey = WORKBENCH_HTML_PATH.split(path.sep).join('/');
@@ -383,6 +383,11 @@ function applyPatch(options = {}) {
                 fs.copyFileSync(entry.backupPath, entry.filePath);
             }
         }
+        // Restore workbench.html if it was backed up
+        if (htmlBackupPath && fs.existsSync(htmlBackupPath)) {
+            const htmlTarget = path.join(appRoot, WORKBENCH_HTML_PATH);
+            fs.copyFileSync(htmlBackupPath, htmlTarget);
+        }
         if (fs.existsSync(productBackupPath)) {
             fs.copyFileSync(productBackupPath, productPath);
         }
@@ -513,6 +518,29 @@ function verifyInstallation(options = {}) {
                 status,
                 target: targetSpec.key,
                 message: `Checksum mismatch for ${targetSpec.label}.`
+            };
+        }
+    }
+
+    // Verify HTML injection integrity
+    const htmlPath = path.join(appRootFromInstallRoot(status.basePath), WORKBENCH_HTML_PATH);
+    if (fs.existsSync(htmlPath)) {
+        const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+        if (!htmlContent.includes(DOM_TAG_START)) {
+            return {
+                ok: false,
+                code: 'html-marker-missing',
+                status,
+                message: 'Supersmooth DOM script marker missing from workbench.html.'
+            };
+        }
+        const htmlChecksumKey = WORKBENCH_HTML_PATH.split(path.sep).join('/');
+        if (!checksumMatches(status.basePath, { checksumKey: htmlChecksumKey, path: htmlPath })) {
+            return {
+                ok: false,
+                code: 'html-checksum-mismatch',
+                status,
+                message: 'Checksum mismatch for workbench.html.'
             };
         }
     }

@@ -1,7 +1,7 @@
 {
   "name": "supersmooth",
   "version": "0.1.0",
-  "description": "Seamless Antigravity terminal workflow. Auto-accepts saved run policies and auto-expands approval prompts.",
+  "description": "Seamless Antigravity workflow. Auto-accepts run policies, auto-expands approval prompts, auto-clicks permission dialogs, auto-scrolls chat, dismisses corrupt warnings.",
   "license": "MIT",
   "icon": "icon.png",
   "repository": {
