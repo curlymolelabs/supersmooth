@@ -409,17 +409,24 @@ async function promptToEnableOnFirstRun(context, vscode) {
     await setDesiredMode(context, DESIRED_MODE_DEFERRED);
 }
 
-async function syncDesiredStateOnStartup(context, vscode) {
+async function syncDesiredStateOnStartup(context, vscode, log) {
     const status = collectStatus(statusOptions(vscode));
     const desiredMode = getDesiredMode(context);
     const action = determineStartupAction(desiredMode, status);
 
+    log(`[startup] desiredMode=${JSON.stringify(desiredMode)} status.ok=${status.ok} overallState=${status.ok ? status.overallState : 'N/A'} detection=${status.detection ? status.detection.method : 'none'} action=${action}`);
+    if (!status.ok) {
+        log(`[startup] detection failed: ${status.message}`);
+    }
+
     switch (action) {
         case 'adopt-enabled':
             await setDesiredMode(context, DESIRED_MODE_ENABLED);
+            log('[startup] adopted existing patches as enabled');
             return;
 
         case 'prompt-enable':
+            log('[startup] showing first-run modal');
             await promptToEnableOnFirstRun(context, vscode);
             return;
 
@@ -462,8 +469,15 @@ async function syncDesiredStateOnStartup(context, vscode) {
 
 function activate(context) {
     const vscode = require('vscode');
+    const outputChannel = vscode.window.createOutputChannel('Supersmooth');
+    const log = (msg) => outputChannel.appendLine(`[${new Date().toISOString()}] ${msg}`);
+
+    log(`[activate] appRoot=${JSON.stringify(vscode.env.appRoot)}`);
+    log(`[activate] desiredMode=${JSON.stringify(getDesiredMode(context))}`);
+
     const setupStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
     context.subscriptions.push(setupStatusBarItem);
+    context.subscriptions.push(outputChannel);
 
     const refreshUi = () => {
         const status = collectStatus(statusOptions(vscode));
@@ -499,7 +513,7 @@ function activate(context) {
     // Delay startup sync by 2 seconds so the welcome dialog appears
     // after Antigravity's own "extension installed" toast clears.
     const startupTimer = setTimeout(() => {
-        void syncDesiredStateOnStartup(context, vscode).finally(refreshUi);
+        void syncDesiredStateOnStartup(context, vscode, log).finally(refreshUi);
     }, 2000);
     context.subscriptions.push({ dispose: () => clearTimeout(startupTimer) });
 }
