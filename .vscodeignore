@@ -2,7 +2,11 @@
 .agents/**
 .supersmooth/**
 .npm-cache/**
+.vsix-build-*/**
 test/**
 docs/**
+plans/**
+research/**
 DISTRIBUTION.md
 *.tgz
+*.vsix
