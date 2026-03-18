@@ -1,0 +1,79 @@
+{
+  "name": "supersmooth",
+  "version": "0.1.2",
+  "description": "Smooth Antigravity workflow with explicit enable and disable controls for local patching.",
+  "license": "MIT",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/curlymolelabs/supersmooth"
+  },
+  "homepage": "https://github.com/curlymolelabs/supersmooth#readme",
+  "bugs": {
+    "url": "https://github.com/curlymolelabs/supersmooth/issues"
+  },
+  "publisher": "curlymolelabs",
+  "displayName": "Supersmooth",
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "antigravity",
+    "terminal",
+    "autorun",
+    "smooth",
+    "workflow"
+  ],
+  "main": "./src/extension.js",
+  "bin": {
+    "supersmooth": "./bin/supersmooth.js"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "supersmooth.status",
+        "title": "Supersmooth: Show Status"
+      },
+      {
+        "command": "supersmooth.apply",
+        "title": "Supersmooth: Enable Supersmooth"
+      },
+      {
+        "command": "supersmooth.revert",
+        "title": "Supersmooth: Disable Supersmooth"
+      },
+      {
+        "command": "supersmooth.removeCleanly",
+        "title": "Supersmooth: Remove Cleanly"
+      },
+      {
+        "command": "supersmooth.verify",
+        "title": "Supersmooth: Verify Installation"
+      }
+    ],
+    "configuration": {
+      "title": "Supersmooth",
+      "properties": {
+        "supersmooth.installPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional Antigravity install root override. Leave empty to auto-detect."
+        }
+      }
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "vscode": "^1.107.0"
+  },
+  "scripts": {
+    "status": "node bin/supersmooth.js status",
+    "verify": "node bin/supersmooth.js verify",
+    "watch": "node bin/supersmooth.js watch",
+    "test": "node test/patching.test.js && node test/extension.test.js",
+    "pack:npm": "npm pack --dry-run --cache .npm-cache"
+  }
+}
