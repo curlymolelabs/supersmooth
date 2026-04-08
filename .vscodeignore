@@ -1,5 +1,11 @@
 .git/**
+.gitignore
 node_modules/
 test/**
 *.tgz
 *.vsix
+
+# Private agent context (must never be published)
+.agents/**
+.gemini/**
+scratch_*

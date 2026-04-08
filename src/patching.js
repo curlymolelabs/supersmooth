@@ -1,12 +1,12 @@
 'use strict';
 
-const { SUPER_MARKER, PANEL_MARKER, LEGACY_MARKER } = require('./support');
+const { SUPER_MARKER, PANEL_MARKER, DOM_ONLY_MARKER, LEGACY_MARKER } = require('./support');
 
 function classifyTargetState(targetSpec, record) {
     if (!record.exists) {
         return 'missing';
     }
-    if (record.activeContent.includes(SUPER_MARKER) || record.activeContent.includes(PANEL_MARKER)) {
+    if (record.activeContent.includes(SUPER_MARKER) || record.activeContent.includes(PANEL_MARKER) || record.activeContent.includes(DOM_ONLY_MARKER)) {
         return 'supersmooth-patched';
     }
     if (record.activeContent.includes(LEGACY_MARKER)) {

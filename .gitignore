@@ -9,3 +9,8 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# Private agent context
+.agents/
+.gemini/
+scratch_*

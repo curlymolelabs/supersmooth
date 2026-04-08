@@ -2,6 +2,29 @@
 
 All notable changes to the Supersmooth extension will be documented in this file.
 
+## 0.2.0 (2026-04-08)
+
+### Features
+
+- AG 1.22.2 compatibility: DOM-only fallback mode for browser URL auto-approval
+- When terminal autorun patch fails (AG 1.22.2 changed the bundle structure), Supersmooth now falls back to injecting only the DOM auto-clicker script
+- New button labels: "Allow for Workspace", "Allow Globally" added to auto-click patterns
+- New priority patterns: "Allow for Workspace", "Allow Globally" preferred over one-time approvals
+- New reject word: "Block" added to safety gate
+- All existing features continue to work on older AG versions (before 1.22.0)
+
+### What AG 1.22.2 Fixed Natively
+
+- Terminal autorun confirmations (Turbo mode + Allow/Deny lists)
+- Panel auto-expand ("Requires Input" sections)
+- Agent panel auto-scroll
+- Auto-click for terminal, file, and MCP approval prompts
+
+### What Still Needs Supersmooth
+
+- Browser URL approval auto-click (not covered by AG 1.22.2 native controls)
+- Corrupt banner dismissal (triggered by any file patching)
+
 ## 0.1.2 (2026-03-17)
 
 ### Features

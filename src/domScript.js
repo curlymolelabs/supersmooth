@@ -71,11 +71,12 @@ function buildDomScript() {
     var FALLBACK_CONTAINER = true;
     var CLICK_PATTERNS = [
         'Allow', 'Always Allow', 'Always Proceed', 'Allow This Conversation',
+        'Allow for Workspace', 'Allow Globally',
         'Run', 'Keep Waiting', 'Accept', 'Retry', 'Allow Once'
     ];
-    var PRIORITY_PATTERNS = ['Always Allow', 'Always Proceed', 'Allow This Conversation'];
+    var PRIORITY_PATTERNS = ['Always Allow', 'Always Proceed', 'Allow This Conversation', 'Allow for Workspace', 'Allow Globally'];
     var REJECT_WORDS = [
-        'Reject', 'Deny', 'Cancel', 'Dismiss', "Don't Allow", 'Decline'
+        'Reject', 'Deny', 'Cancel', 'Dismiss', "Don't Allow", 'Decline', 'Block'
     ];
     var EDITOR_SKIP = [
         'Accept Changes', 'Accept All', 'Accept Incoming',

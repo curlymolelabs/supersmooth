@@ -4,6 +4,7 @@ const path = require('path');
 
 const SUPER_MARKER = '/*SUPERSMOOTH:autorun*/';
 const PANEL_MARKER = '/*SUPERSMOOTH:panel*/';
+const DOM_ONLY_MARKER = '/*SUPERSMOOTH:dom-only*/';
 const LEGACY_MARKER = '/*AGFIX:autorun*/';
 const SUPER_DIR = '.supersmooth';
 const MANIFEST_VERSION = 1;
@@ -101,6 +102,7 @@ function compareVersions(a, b) {
 }
 
 module.exports = {
+    DOM_ONLY_MARKER,
     LEGACY_MARKER,
     MANIFEST_VERSION,
     PANEL_MARKER,

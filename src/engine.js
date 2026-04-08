@@ -10,6 +10,7 @@ const {
     MANIFEST_VERSION,
     SUPER_DIR,
     SUPPORTED_PROFILES,
+    DOM_ONLY_MARKER,
     WORKBENCH_HTML_CHECKSUM_KEY,
     WORKBENCH_HTML_PATH,
     findMatchingProfile
@@ -279,10 +280,19 @@ function applyPatch(options = {}) {
     }
 
     const plans = [];
+    let domOnlyMode = false;
+
     for (const targetSpec of status.profile.targets) {
         const record = status.records.find(item => item.key === targetSpec.key);
         const patch = planPatchForTarget(targetSpec, record.activeContent);
         if (!patch.ok) {
+            // On AG 1.22.2+, the terminal autorun anchor changed structure.
+            // Fall back to DOM-only mode: inject only the DOM auto-clicker
+            // (for browser URL approvals) without terminal/panel patches.
+            if (patch.reason === 'onchange-not-found' || patch.reason === 'anchor-not-found') {
+                domOnlyMode = true;
+                break;
+            }
             return {
                 ok: false,
                 code: 'planning-failed',
@@ -316,6 +326,39 @@ function applyPatch(options = {}) {
         plans.push({ record, targetSpec, patch: { ...patch, patchedContent: finalContent } });
     }
 
+    // DOM-only mode: only patch the workbench bundle with DOM script (no terminal/panel patches).
+    // This handles AG 1.22.2+ where those features are native but browser URL approval is not.
+    if (domOnlyMode) {
+        const wbSpec = status.profile.targets.find(t => t.key === 'workbench');
+        const wbRecord = status.records.find(r => r.key === 'workbench');
+        if (!wbSpec || !wbRecord || !wbRecord.exists) {
+            return {
+                ok: false,
+                code: 'dom-only-failed',
+                status,
+                message: 'DOM-only mode: workbench bundle not found.'
+            };
+        }
+
+        const domContent = wbRecord.activeContent + '\n' + DOM_ONLY_MARKER + buildDomScriptForJs();
+        const syntax = syntaxCheckText(path.basename(wbRecord.path), domContent);
+        if (!syntax.ok) {
+            return {
+                ok: false,
+                code: 'syntax-check-failed',
+                status,
+                target: 'workbench',
+                message: syntax.message
+            };
+        }
+
+        plans.push({
+            record: wbRecord,
+            targetSpec: wbSpec,
+            patch: { ok: true, patchedContent: domContent, diagnostics: ['dom-only-mode'] }
+        });
+    }
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupRoot = path.join(getSupportRoot(status.basePath), 'backups', timestamp);
     ensureDir(backupRoot);
@@ -338,7 +381,8 @@ function applyPatch(options = {}) {
         for (const plan of plans) {
             let content = plan.patch.patchedContent;
             // Embed DOM script into workbench JS (CSP blocks inline <script> in HTML)
-            if (plan.targetSpec.key === 'workbench') {
+            // In DOM-only mode, the DOM script is already in patchedContent.
+            if (plan.targetSpec.key === 'workbench' && !domOnlyMode) {
                 content += buildDomScriptForJs();
             }
             fs.writeFileSync(plan.record.path, content);

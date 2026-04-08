@@ -1,16 +1,41 @@
 # Supersmooth
 
-Supersmooth makes your Antigravity workflow truly seamless. It automatically patches your installation to remove unnecessary confirmation prompts and auto-expand approval sections, so you can focus on building instead of clicking.
+Supersmooth auto-approves browser URL prompts in Antigravity so the agent can open documentation, check APIs, and browse the web without interrupting your flow.
+
+## Antigravity 1.22.2 Compatibility
+
+Antigravity 1.22.2 (April 2026) introduced a native agent permission system that fixes most of the issues Supersmooth was originally built for:
+
+| Issue | AG 1.22.2 | Supersmooth Still Needed? |
+|-------|-----------|---------------------------|
+| Terminal autorun confirmations | Fixed (Turbo mode + Allow/Deny lists) | No |
+| Panel auto-expand | Fixed | No |
+| Agent panel auto-scroll | Fixed | No |
+| Auto-click terminal/file/MCP approvals | Fixed (Allow lists) | No |
+| **Browser URL approval prompts** | **Not fixed** | **Yes** |
+| Corrupt banner dismissal | N/A | Only if patching |
+
+**If you can tolerate the occasional "Open URL in browser?" prompt:** you may not need Supersmooth anymore. Just update to AG 1.22.2 and uninstall Supersmooth (see [Clean Disable and Uninstall](#clean-disable-and-uninstall)).
+
+**If you are on AG 1.22.2 or later:** Supersmooth 0.2.0 is compatible. It runs in DOM-only mode: only the browser URL auto-approval feature is active (all other features are native in AG 1.22.2).
+
+**If you are on an older AG version (before 1.22.0):** Supersmooth 0.2.0 continues to work with all features active.
 
 ## What It Does
 
-- **Removes terminal autorun confirmations** when your saved policy is already "Always run"
-- **Auto-expands approval prompts** so "Steps Require Input" sections are never hidden
-- **Auto-clicks approval buttons** (Allow, Always Allow, Accept, Run) in permission dialogs, browser URL prompts, and file access prompts. Prefers persistent options like "Always Allow" over one-time approvals.
-- **Auto-scrolls the agent panel** during generation, pauses when you scroll up
+On AG 1.22.2+, Supersmooth provides:
+
+- **Auto-clicks browser URL approval buttons** ("Allow", "Allow for Workspace", "Allow Globally") when the agent wants to open a URL
 - **Dismisses "corrupt installation" warnings** automatically after patching
-- **Safely reversible** with full backup and one-click revert
-- **Auto-detects updates** and re-applies when Antigravity overwrites patched files
+
+On older AG versions, Supersmooth also provides these legacy features (now native in 1.22.2+):
+
+- Removes terminal autorun confirmations
+- Auto-expands approval prompts so "Steps Require Input" sections are never hidden
+- Auto-clicks all approval buttons (terminal, file, MCP, and browser URL)
+- Auto-scrolls the agent panel during generation
+- Safely reversible with full backup and one-click revert
+- Auto-detects updates and re-applies when Antigravity overwrites patched files
 
 Supersmooth is installed separately from the on-disk patch. That distinction matters:
 
@@ -126,6 +151,14 @@ MIT
 
 Supersmooth 让你的 Antigravity 工作流程更顺畅。它自动修补安装文件, 移除不必要的确认弹窗, 自动展开审批区域, 让你专注于编码而非点击。
 
+### Antigravity 1.22.2 兼容性
+
+Antigravity 1.22.2 (2026年4月) 原生修复了 Supersmooth 的大部分功能。唯一未修复的是**浏览器URL审批自动点击**。
+
+**AG 1.22.2 或更高版本:** Supersmooth 0.2.0 兼容。以 DOM-only 模式运行, 仅浏览器URL自动审批功能激活 (其他功能在 AG 1.22.2 中已原生支持)。
+
+**旧版 AG (1.22.0 之前):** Supersmooth 0.2.0 仍然正常工作, 所有功能均可使用。
+
 ### 功能
 
 - **移除终端自动运行确认弹窗** (当策略为 "Always run" 时)
@@ -203,6 +236,14 @@ Supersmooth 让你的 Antigravity 工作流程更顺畅。它自动修补安装�
 
 Supersmooth は Antigravity のワークフローをスムーズにします。不要な確認プロンプトを自動的に削除し、承認セクションを自動展開するので、クリックではなくコーディングに集中できます。
 
+### Antigravity 1.22.2 互換性
+
+Antigravity 1.22.2 (2026年4月) はSupersmoothのほとんどの機能をネイティブに修正しました。唯一未修正なのは**ブラウザURL承認の自動クリック**です。
+
+**AG 1.22.2 以降:** Supersmooth 0.2.0 は互換性があります。DOM-onlyモードで動作し、ブラウザURL自動承認機能のみがアクティブです (他の機能はAG 1.22.2でネイティブ対応済み)。
+
+**旧バージョンのAG (1.22.0 以前):** Supersmooth 0.2.0 は引き続き全機能で動作します。
+
 ### 機能
 
 - **ターミナル自動実行確認の削除** (ポリシーが "Always run" の場合)
@@ -279,6 +320,14 @@ Supersmooth は Antigravity のワークフローをスムーズにします。�
 ## 한국어
 
 Supersmooth는 Antigravity 워크플로우를 매끄럽게 만듭니다. 불필요한 확인 프롬프트를 자동으로 제거하고 승인 섹션을 자동 확장하여 클릭 대신 코딩에 집중할 수 있습니다.
+
+### Antigravity 1.22.2 호환성
+
+Antigravity 1.22.2 (2026년 4월)는 Supersmooth의 대부분의 기능을 기본적으로 수정했습니다. 유일하게 수정되지 않은 것은 **브라우저 URL 승인 자동 클릭**입니다.
+
+**AG 1.22.2 이상:** Supersmooth 0.2.0은 호환됩니다. DOM-only 모드로 실행되며 브라우저 URL 자동 승인 기능만 활성화됩니다 (다른 기능은 AG 1.22.2에서 기본 지원).
+
+**이전 AG 버전 (1.22.0 이전):** Supersmooth 0.2.0은 모든 기능으로 계속 작동합니다.
 
 ### 기능
 
