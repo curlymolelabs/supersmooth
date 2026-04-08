@@ -2,6 +2,13 @@
 
 All notable changes to the Supersmooth extension will be documented in this file.
 
+## 0.2.1 (2026-04-08)
+
+### Fixes
+
+- Fixed "partially patched" warning on AG 1.22.2+ (DOM-only mode was incorrectly detected as mixed state)
+- Updated README across all languages to match 0.2.0 messaging
+
 ## 0.2.0 (2026-04-08)
 
 ### Features
