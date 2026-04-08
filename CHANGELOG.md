@@ -11,7 +11,7 @@ All notable changes to the Supersmooth extension will be documented in this file
 - New button labels: "Allow for Workspace", "Allow Globally" added to auto-click patterns
 - New priority patterns: "Allow for Workspace", "Allow Globally" preferred over one-time approvals
 - New reject word: "Block" added to safety gate
-- All existing features continue to work on older AG versions (before 1.22.0)
+- For older AG versions (before 1.22.0), stay on Supersmooth 0.1.2
 
 ### What AG 1.22.2 Fixed Natively
 

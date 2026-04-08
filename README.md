@@ -19,7 +19,7 @@ Antigravity 1.22.2 (April 2026) introduced a native agent permission system that
 
 **If you are on AG 1.22.2 or later:** Supersmooth 0.2.0 is compatible. It runs in DOM-only mode: only the browser URL auto-approval feature is active (all other features are native in AG 1.22.2).
 
-**If you are on an older AG version (before 1.22.0):** Supersmooth 0.2.0 continues to work with all features active.
+**If you are on an older AG version (before 1.22.0):** Stay on Supersmooth 0.1.2, which was tested and verified for those versions.
 
 ## What It Does
 
@@ -149,25 +149,33 @@ MIT
 
 ## 简体中文
 
-Supersmooth 让你的 Antigravity 工作流程更顺畅。它自动修补安装文件, 移除不必要的确认弹窗, 自动展开审批区域, 让你专注于编码而非点击。
+Supersmooth 自动审批 Antigravity 中的浏览器URL提示, 让代理可以打开文档, 检查API和浏览网页而不中断你的工作流程。
 
 ### Antigravity 1.22.2 兼容性
 
 Antigravity 1.22.2 (2026年4月) 原生修复了 Supersmooth 的大部分功能。唯一未修复的是**浏览器URL审批自动点击**。
 
-**AG 1.22.2 或更高版本:** Supersmooth 0.2.0 兼容。以 DOM-only 模式运行, 仅浏览器URL自动审批功能激活 (其他功能在 AG 1.22.2 中已原生支持)。
+**如果你能接受偶尔出现的 "在浏览器中打开URL?" 提示:** 你可能不再需要 Supersmooth。更新到 AG 1.22.2 并卸载即可。
 
-**旧版 AG (1.22.0 之前):** Supersmooth 0.2.0 仍然正常工作, 所有功能均可使用。
+**AG 1.22.2 或更高版本:** Supersmooth 0.2.0 兼容。以 DOM-only 模式运行, 仅浏览器URL自动审批功能激活。
+
+**旧版 AG (1.22.0 之前):** 请继续使用 Supersmooth 0.1.2, 该版本已在旧版本上测试验证。
 
 ### 功能
 
-- **移除终端自动运行确认弹窗** (当策略为 "Always run" 时)
-- **自动展开审批提示** ("Steps Require Input" 不再隐藏)
-- **自动点击审批按钮** (Allow, Always Allow, Accept, Run 等权限对话框, 浏览器URL提示, 文件访问提示)。优先选择持久选项如 "Always Allow"
-- **代理面板自动滚动** (生成时自动滚动, 手动上滑时暂停)
+AG 1.22.2+ 上, Supersmooth 提供:
+
+- **自动点击浏览器URL审批按钮** ("Allow", "Allow for Workspace", "Allow Globally")
 - **自动关闭 "安装已损坏" 警告**
-- **安全可逆** (完整备份, 一键还原)
-- **自动检测更新** (Antigravity 更新覆盖文件后自动重新应用)
+
+旧版 AG 上, Supersmooth 0.1.2 还提供以下功能 (已在 1.22.2+ 中原生支持):
+
+- 移除终端自动运行确认弹窗
+- 自动展开审批提示
+- 自动点击所有审批按钮 (终端, 文件, MCP, 浏览器URL)
+- 代理面板自动滚动
+- 安全可逆, 完整备份一键还原
+- 自动检测更新并重新应用
 
 ### 安装
 
@@ -234,25 +242,33 @@ Antigravity 1.22.2 (2026年4月) 原生修复了 Supersmooth 的大部分功能�
 
 ## 日本語
 
-Supersmooth は Antigravity のワークフローをスムーズにします。不要な確認プロンプトを自動的に削除し、承認セクションを自動展開するので、クリックではなくコーディングに集中できます。
+Supersmooth は Antigravity のブラウザURL承認プロンプトを自動承認し、エージェントがドキュメントの参照、APIの確認、ウェブブラウジングを中断なく行えるようにします。
 
 ### Antigravity 1.22.2 互換性
 
 Antigravity 1.22.2 (2026年4月) はSupersmoothのほとんどの機能をネイティブに修正しました。唯一未修正なのは**ブラウザURL承認の自動クリック**です。
 
-**AG 1.22.2 以降:** Supersmooth 0.2.0 は互換性があります。DOM-onlyモードで動作し、ブラウザURL自動承認機能のみがアクティブです (他の機能はAG 1.22.2でネイティブ対応済み)。
+**「ブラウザでURLを開きますか?」のプロンプトを許容できる場合:** Supersmoothは不要かもしれません。AG 1.22.2に更新してアンインストールしてください。
 
-**旧バージョンのAG (1.22.0 以前):** Supersmooth 0.2.0 は引き続き全機能で動作します。
+**AG 1.22.2 以降:** Supersmooth 0.2.0 は互換性があります。DOM-onlyモードで動作し、ブラウザURL自動承認機能のみがアクティブです。
+
+**旧バージョンのAG (1.22.0 以前):** Supersmooth 0.1.2 をご利用ください。旧バージョンでテスト検証済みです。
 
 ### 機能
 
-- **ターミナル自動実行確認の削除** (ポリシーが "Always run" の場合)
-- **承認プロンプトの自動展開** ("Steps Require Input" を常に表示)
-- **承認ボタンの自動クリック** (Allow, Always Allow, Accept, Run など、権限ダイアログ、ブラウザURLプロンプト、ファイルアクセスプロンプト)。"Always Allow" などの永続オプションを優先
-- **エージェントパネルの自動スクロール** (生成中に自動スクロール、手動スクロールで一時停止)
+AG 1.22.2+ では、Supersmoothは以下を提供:
+
+- **ブラウザURL承認ボタンの自動クリック** ("Allow", "Allow for Workspace", "Allow Globally")
 - **「インストールが破損」警告の自動非表示**
-- **安全に元に戻せる** (完全バックアップ、ワンクリックで復元)
-- **更新の自動検出** (Antigravity の更新でファイルが置き換えられた場合、自動的に再適用)
+
+旧バージョンのAGでは、Supersmooth 0.1.2が以下も提供 (1.22.2+でネイティブ対応済み):
+
+- ターミナル自動実行確認の削除
+- 承認プロンプトの自動展開
+- すべての承認ボタンの自動クリック (ターミナル、ファイル、MCP、ブラウザURL)
+- エージェントパネルの自動スクロール
+- 安全に元に戻せる (完全バックアップ、ワンクリック復元)
+- 更新の自動検出と再適用
 
 ### インストール
 
@@ -319,25 +335,33 @@ Antigravity 1.22.2 (2026年4月) はSupersmoothのほとんどの機能をネイ
 
 ## 한국어
 
-Supersmooth는 Antigravity 워크플로우를 매끄럽게 만듭니다. 불필요한 확인 프롬프트를 자동으로 제거하고 승인 섹션을 자동 확장하여 클릭 대신 코딩에 집중할 수 있습니다.
+Supersmooth는 Antigravity의 브라우저 URL 승인 프롬프트를 자동 승인하여 에이전트가 문서 확인, API 체크, 웹 브라우징을 중단 없이 수행할 수 있게 합니다.
 
 ### Antigravity 1.22.2 호환성
 
 Antigravity 1.22.2 (2026년 4월)는 Supersmooth의 대부분의 기능을 기본적으로 수정했습니다. 유일하게 수정되지 않은 것은 **브라우저 URL 승인 자동 클릭**입니다.
 
-**AG 1.22.2 이상:** Supersmooth 0.2.0은 호환됩니다. DOM-only 모드로 실행되며 브라우저 URL 자동 승인 기능만 활성화됩니다 (다른 기능은 AG 1.22.2에서 기본 지원).
+**가끔 나타나는 "브라우저에서 URL 열기?" 프롬프트를 허용할 수 있다면:** Supersmooth가 필요하지 않을 수 있습니다. AG 1.22.2로 업데이트하고 제거하세요.
 
-**이전 AG 버전 (1.22.0 이전):** Supersmooth 0.2.0은 모든 기능으로 계속 작동합니다.
+**AG 1.22.2 이상:** Supersmooth 0.2.0은 호환됩니다. DOM-only 모드로 실행되며 브라우저 URL 자동 승인 기능만 활성화됩니다.
+
+**이전 AG 버전 (1.22.0 이전):** Supersmooth 0.1.2를 사용하세요. 이전 버전에서 테스트 및 검증되었습니다.
 
 ### 기능
 
-- **터미널 자동 실행 확인 제거** (정책이 "Always run"인 경우)
-- **승인 프롬프트 자동 확장** ("Steps Require Input" 항상 표시)
-- **승인 버튼 자동 클릭** (Allow, Always Allow, Accept, Run 등 권한 대화 상자, 브라우저 URL 프롬프트, 파일 접근 프롬프트). "Always Allow" 같은 영구 옵션 우선 선택
-- **에이전트 패널 자동 스크롤** (생성 중 자동 스크롤, 수동 스크롤 시 일시 중지)
+AG 1.22.2+에서 Supersmooth 제공 기능:
+
+- **브라우저 URL 승인 버튼 자동 클릭** ("Allow", "Allow for Workspace", "Allow Globally")
 - **"설치가 손상됨" 경고 자동 해제**
-- **안전하게 되돌리기 가능** (전체 백업, 원클릭 복원)
-- **업데이트 자동 감지** (Antigravity 업데이트로 파일이 교체되면 자동 재적용)
+
+이전 AG 버전에서 Supersmooth 0.1.2 추가 기능 (1.22.2+에서 기본 지원됨):
+
+- 터미널 자동 실행 확인 제거
+- 승인 프롬프트 자동 확장
+- 모든 승인 버튼 자동 클릭 (터미널, 파일, MCP, 브라우저 URL)
+- 에이전트 패널 자동 스크롤
+- 안전하게 되돌리기 가능 (전체 백업, 원클릭 복원)
+- 업데이트 자동 감지 및 재적용
 
 ### 설치
 
