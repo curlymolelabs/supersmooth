@@ -97,6 +97,12 @@ function detectState(profile, records) {
     if (records.every(record => record.state === 'supersmooth-patched')) {
         return 'patched';
     }
+    // DOM-only mode: workbench is patched, jetskiAgent is intentionally unpatched.
+    // This is valid when AG 1.22.2+ handles terminal autorun natively.
+    if (records.some(record => record.state === 'supersmooth-patched') &&
+        records.every(record => record.state === 'supersmooth-patched' || record.state === 'unknown')) {
+        return 'patched';
+    }
     if (records.some(record => record.state === 'legacy-patched')) {
         return 'legacy';
     }
